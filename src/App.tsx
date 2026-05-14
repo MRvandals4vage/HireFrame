@@ -58,8 +58,14 @@ export default function App() {
             className="w-56 border-r border-edge bg-surface flex flex-col py-8 px-5 sticky top-0 h-screen shrink-0 z-10"
           >
             {/* Wordmark */}
-            <div className="mb-10">
-              <span className="text-[14px] font-bold tracking-tight text-ink">Hire Frame</span>
+            <div className="flex items-center gap-3 mb-12 px-2 group cursor-default">
+              <div className="w-10 h-10 rounded-xl bg-ink flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
+                <span className="text-canvas font-black text-xl italic">H</span>
+              </div>
+              <div>
+                <h1 className="text-lg font-black tracking-tight leading-none">Hire Frame</h1>
+                <p className="text-[10px] font-bold text-muted uppercase tracking-[0.2em] mt-1 opacity-60">Intelligence</p>
+              </div>
             </div>
 
             {/* Nav */}

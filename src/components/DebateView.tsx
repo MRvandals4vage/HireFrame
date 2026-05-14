@@ -545,7 +545,7 @@ export function DebateView({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.28, ease: 'easeOut' }}
-                      className="rounded-lg p-3.5 text-[13px] leading-relaxed"
+                      className="rounded-xl p-4 text-[14px] leading-relaxed tracking-tight shadow-sm border border-edge/30"
                       style={{ background: config.tint, color: 'var(--color-ink)' }}
                     >
                       {msg.text}
@@ -557,7 +557,7 @@ export function DebateView({
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-lg p-3.5 text-[13px] leading-relaxed"
+                    className="rounded-xl p-4 text-[14px] leading-relaxed tracking-tight shadow-sm border border-edge/30"
                     style={{ background: config.tint, color: 'var(--color-ink)' }}
                   >
                     {currentPartialText}

@@ -46,23 +46,23 @@
   font-size: clamp(36px, 6vw, 56px);
   font-weight: 800;
   line-height: 1.05;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.05em;
   color: var(--color-ink);
 }
 
 .font-headline {
   font-size: clamp(24px, 3vw, 32px);
   font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  line-height: 1.15;
+  letter-spacing: -0.035em;
   color: var(--color-ink);
 }
 
 .font-label {
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.12em;
   color: var(--color-muted);
 }
 
@@ -70,7 +70,7 @@
   font-size: clamp(64px, 8vw, 96px);
   font-weight: 800;
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.06em;
 }
 
 .font-score-unit {

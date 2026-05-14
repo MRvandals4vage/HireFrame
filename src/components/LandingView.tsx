@@ -105,19 +105,31 @@ export function LandingView({
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-16 bg-canvas relative overflow-hidden">
       
+      {/* Decorative Background Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-maya/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-alex/5 blur-[120px] rounded-full pointer-events-none" />
+      
+      {/* Grid Pattern Overlay */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+           style={{ backgroundImage: 'radial-gradient(var(--color-edge-strong) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+
       {/* Main minimal UI */}
       <div className="w-full max-w-[440px] flex flex-col items-center relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-10 text-center"
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-14 text-center"
         >
-          <h1 className="text-[40px] font-bold tracking-tight" style={{ color: 'var(--color-ink)' }}>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface border border-edge mb-6 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-maya animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted">v2.0 Beta now live</span>
+          </div>
+          <h1 className="font-display text-[56px] leading-[0.9] mb-4" style={{ color: 'var(--color-ink)' }}>
             Hire Frame
           </h1>
-          <p className="mt-2 text-[15px]" style={{ color: 'var(--color-muted)' }}>
-            AI-powered interview readiness assessment.
+          <p className="mt-4 text-[17px] font-medium tracking-tight max-w-[320px] mx-auto opacity-80" style={{ color: 'var(--color-muted)' }}>
+            Engineered intelligence for the next generation of technical talent.
           </p>
         </motion.div>
 
@@ -134,9 +146,9 @@ export function LandingView({
               onDragLeave={handleDragLeave}
               onClick={() => !isExtracting && fileInputRef.current?.click()}
               className={`
-                relative rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer
-                transition-all duration-300 text-center border border-edge
-                ${isDragging ? 'bg-edge scale-[1.02]' : 'bg-surface hover:bg-raised hover:scale-[1.02] hover:shadow-sm'}
+                relative rounded-2xl p-12 flex flex-col items-center justify-center cursor-pointer
+                transition-all duration-500 text-center border border-edge/50
+                ${isDragging ? 'bg-edge/40 scale-[1.02] border-maya shadow-xl' : 'bg-surface/80 backdrop-blur-sm hover:bg-raised hover:scale-[1.02] hover:shadow-2xl hover:border-edge-strong'}
               `}
             >
               {isExtracting ? (
@@ -226,7 +238,7 @@ export function LandingView({
               className="w-full max-w-[500px] p-8 rounded-2xl bg-surface border border-edge shadow-lg"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-[22px] font-bold text-ink">Evaluation Settings</h2>
+                <h2 className="font-headline">Evaluation Settings</h2>
                 <button 
                   onClick={() => setShowConfigModal(false)}
                   className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-edge transition-colors"
