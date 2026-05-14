@@ -210,11 +210,11 @@ ${messages.map((m) => `  [${m.recruiter}] ${m.text}`).join('\n')}
         >
           <button
             onClick={handleCopy}
-            className="w-full sm:w-auto bg-surface border border-edge text-ink text-sm font-medium px-6 py-3 rounded-lg hover:bg-canvas transition-colors cursor-pointer flex items-center justify-center gap-2"
+            className="w-full sm:w-auto bg-dark text-white text-sm font-medium px-6 py-3 rounded-lg hover:scale-[1.02] active:scale-[0.98] transition-transform cursor-pointer flex items-center justify-center gap-2"
           >
             {copied ? (
               <>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
                 Copied!
@@ -228,17 +228,6 @@ ${messages.map((m) => `  [${m.recruiter}] ${m.text}`).join('\n')}
                 Copy my report
               </>
             )}
-          </button>
-
-          <button
-            onClick={onRestart}
-            className="w-full sm:w-auto bg-dark text-white text-sm font-medium px-6 py-3 rounded-lg hover:scale-[1.02] active:scale-[0.98] transition-transform cursor-pointer flex items-center justify-center gap-2"
-          >
-            Test another role
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
           </button>
         </motion.div>
       </div>

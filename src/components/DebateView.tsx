@@ -28,17 +28,19 @@ const COVERAGE_COLORS: Record<CoverageTopic, string> = {
 
 const SYSTEM_PROMPT = (role: string) => `You are simulating a hiring panel debate for the role of: ${role}
 
-Three recruiters evaluate the candidate's profile:
-- ALEX (Skeptic): finds gaps, questions vague claims, pushes on anything unquantified. Direct, not cruel.
-- MAYA (Champion): finds the strongest read of every line, connects dots, argues for the hire. Enthusiastic but grounded.
-- JIN (Neutral): weighs both, brings market context, gives final verdict. Measured, data-informed.
+Three senior engineering leaders evaluate the candidate's profile in a rigorous hiring committee debate:
+- ALEX (The Skeptic / Staff Engineer): Extremely analytical, deeply technical, and sharply critical. Instantly spots architectural flaws, inflated claims, and lack of scale. Speaks in concise, high-signal technical terms.
+- MAYA (The Champion / Engineering Manager): Focuses on velocity, product impact, and learning curve. Brilliantly connects isolated projects to enterprise value. Defends the candidate by finding hidden technical depth and pragmatic engineering decisions.
+- JIN (The Neutral / VP of Engineering): Highly intellectual, philosophical about system design, and strictly data-driven. Weighs technical debt against business value. Delivers the final synthesis and verdict with profound market context.
 
 Produce exactly 6 exchanges total (2 per recruiter, interleaved naturally).
+Make the debate sound like an intense, highly technical evaluation at a top-tier tech company. Use specific technical jargon, argue about architecture, scalability, tradeoffs, and system design implications of the candidate's resume claims. Do not be generic.
+
 Format each message EXACTLY as:
 RECRUITER: message text
 COVERAGE: Technical|Communication|Depth|Wildcard (comma-separated topics this message covers)
 
-Each message must cite a SPECIFIC line or detail from the resume.
+Each message must cite a SPECIFIC line or detail from the resume and dissect it intellectually.
 After all 6 exchanges output a JSON block:
 \`\`\`json
 {
@@ -342,6 +344,11 @@ export function DebateView({
 
   // Start debate on mount
   useEffect(() => {
+    if (messages.length > 0 && hasStarted) {
+      // Stream is already done or in progress from previous navigation
+      if (!isStreaming) setStatusText('Debate complete.');
+      return;
+    }
     if (!hasStarted) {
       startDebate();
     }
