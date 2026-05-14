@@ -95,7 +95,7 @@ Return the output EXACTLY as a JSON block:
 
       try {
         const r = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -114,9 +114,10 @@ Return the output EXACTLY as a JSON block:
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
           body: JSON.stringify({
-            model: 'openai/gpt-oss-20b',
+            model: 'llama-3.3-70b-versatile',
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.7,
+            max_tokens: 1500,
           }),
         });
         if (!r.ok) throw new Error(`Groq ${r.status}`);

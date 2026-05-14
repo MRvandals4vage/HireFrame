@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+// Hire Frame Core Application
 import { AnimatePresence, motion } from 'motion/react';
 import { LandingView } from './components/LandingView';
 import { DebateView } from './components/DebateView';
 import { ScoreReveal } from './components/ScoreReveal';
 import { InterviewView } from './components/InterviewView';
+import { TechnicalRound } from './components/TechnicalRound';
+import { LiveMockInterview } from './components/LiveMockInterview';
 import type { Screen, Message, ScoreData, CoverageTopic, EvaluationMode, InterviewState } from './types';
 
 export default function App() {
@@ -29,7 +32,7 @@ export default function App() {
 
   const handleDebateComplete = (data: ScoreData) => {
     setScoreData(data);
-    setScreen('reveal');
+    // Stay on evaluation screen so user can read final messages
   };
 
   const handleRestart = () => {
@@ -86,10 +89,28 @@ export default function App() {
                 className={`nav-item ${screen === 'interview' ? 'active' : ''} ${!scoreData ? 'disabled' : ''}`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${screen === 'interview' ? 'bg-ink' : !scoreData ? 'bg-edge' : 'bg-edge-strong'}`} />
-                Mock Interview
+                Interview
                 {!scoreData && (
                   <span className="ml-auto text-[10px] text-faint font-normal">pending</span>
                 )}
+              </button>
+
+              <button
+                onClick={() => { if (scoreData) setScreen('technical'); }}
+                disabled={!scoreData}
+                className={`nav-item ${screen === 'technical' ? 'active' : ''} ${!scoreData ? 'disabled' : ''}`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${screen === 'technical' ? 'bg-ink' : !scoreData ? 'bg-edge' : 'bg-edge-strong'}`} />
+                Technical (DSA)
+              </button>
+
+              <button
+                onClick={() => { if (scoreData) setScreen('live-interview'); }}
+                disabled={!scoreData}
+                className={`nav-item ${screen === 'live-interview' ? 'active' : ''} ${!scoreData ? 'disabled' : ''}`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${screen === 'live-interview' ? 'bg-ink' : !scoreData ? 'bg-edge' : 'bg-edge-strong'}`} />
+                Live AI Mock
               </button>
             </nav>
 
@@ -166,13 +187,13 @@ export default function App() {
             </motion.div>
           )}
 
-          {screen === 'interview' && (
+          {screen === 'interview' && scoreData && (
             <motion.div
               key="interview"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              className="flex-1 overflow-auto"
             >
               <InterviewView
                 scoreData={scoreData}
@@ -181,6 +202,30 @@ export default function App() {
                 interviewState={interviewState}
                 setInterviewState={setInterviewState}
               />
+            </motion.div>
+          )}
+
+          {screen === 'technical' && (
+            <motion.div
+              key="technical"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              className="flex-1 overflow-auto"
+            >
+              <TechnicalRound onComplete={() => setScreen('live-interview')} />
+            </motion.div>
+          )}
+
+          {screen === 'live-interview' && (
+            <motion.div
+              key="live-interview"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              className="flex-1 overflow-auto"
+            >
+              <LiveMockInterview onComplete={() => setScreen('reveal')} />
             </motion.div>
           )}
         </AnimatePresence>

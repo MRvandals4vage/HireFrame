@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+// Main diagnosis and score display component
 import { motion } from 'motion/react';
 import type { ScoreData, Message, RecruiterName } from '../types';
 

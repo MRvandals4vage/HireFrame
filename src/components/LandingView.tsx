@@ -134,16 +134,10 @@ export function LandingView({
               onDragLeave={handleDragLeave}
               onClick={() => !isExtracting && fileInputRef.current?.click()}
               className={`
-                relative rounded-[20px] p-10 flex flex-col items-center justify-center cursor-pointer
-                transition-all duration-300 text-center
-                ${isDragging ? 'bg-edge scale-105' : 'bg-surface hover:scale-[1.02]'}
+                relative rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer
+                transition-all duration-300 text-center border border-edge
+                ${isDragging ? 'bg-edge scale-[1.02]' : 'bg-surface hover:bg-raised hover:scale-[1.02] hover:shadow-sm'}
               `}
-              style={{
-                boxShadow: isDragging 
-                  ? 'inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,0.8)' 
-                  : '8px 8px 24px rgba(0,0,0,0.06), -8px -8px 24px rgba(255,255,255,0.8)',
-                border: '1px solid rgba(255, 255, 255, 0.4)',
-              }}
             >
               {isExtracting ? (
                 <div className="flex flex-col items-center gap-3">
@@ -155,7 +149,7 @@ export function LandingView({
                 </div>
               ) : (
                 <>
-                  <div className="w-12 h-12 rounded-full bg-canvas flex items-center justify-center mb-4" style={{ boxShadow: 'inset 2px 2px 4px rgba(0,0,0,0.05), inset -2px -2px 4px rgba(255,255,255,0.8)' }}>
+                  <div className="w-12 h-12 rounded-full bg-raised shadow-sm flex items-center justify-center mb-4">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-ink)' }}>
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
                       <polyline points="17 8 12 3 7 8" />
@@ -181,25 +175,12 @@ export function LandingView({
                 onChange={(e) => setResumeText(e.target.value)}
                 placeholder="Paste your resume text here..."
                 rows={8}
-                className="w-full p-5 text-[14px] leading-relaxed resize-none transition-all rounded-[20px]"
-                style={{
-                  background: 'var(--color-surface)',
-                  color: 'var(--color-ink)',
-                  border: '1px solid rgba(255, 255, 255, 0.4)',
-                  boxShadow: 'inset 4px 4px 8px rgba(0,0,0,0.04), inset -4px -4px 8px rgba(255,255,255,0.8)',
-                  outline: 'none',
-                }}
+                className="clay-input w-full p-5 text-[14px] leading-relaxed resize-none transition-all mb-3"
               />
               <button
                 onClick={handlePasteSubmit}
                 disabled={!resumeText.trim()}
-                className="py-3 px-5 rounded-[14px] text-[15px] font-semibold tracking-wide transition-all duration-200"
-                style={{
-                  background: resumeText.trim() ? 'var(--color-ink)' : 'var(--color-edge)',
-                  color: resumeText.trim() ? '#fff' : 'var(--color-muted)',
-                  boxShadow: resumeText.trim() ? '4px 4px 12px rgba(0,0,0,0.15)' : 'none',
-                  cursor: resumeText.trim() ? 'pointer' : 'not-allowed',
-                }}
+                className={`py-3 px-5 text-[15px] transition-all duration-200 ${resumeText.trim() ? 'clay-btn-primary' : 'clay-btn opacity-50 cursor-not-allowed'}`}
               >
                 Continue
               </button>
@@ -242,12 +223,7 @@ export function LandingView({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-[500px] p-8 rounded-[28px]"
-              style={{
-                background: 'var(--color-surface)',
-                border: '1px solid rgba(255, 255, 255, 0.6)',
-                boxShadow: '12px 12px 32px rgba(0,0,0,0.1), -12px -12px 32px rgba(255,255,255,0.9)',
-              }}
+              className="w-full max-w-[500px] p-8 rounded-2xl bg-surface border border-edge shadow-lg"
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[22px] font-bold text-ink">Evaluation Settings</h2>
@@ -270,14 +246,7 @@ export function LandingView({
                     value={targetRole}
                     onChange={(e) => setTargetRole(e.target.value)}
                     placeholder="e.g. Frontend Engineer at a Series B startup"
-                    className="w-full p-4 text-[14px] rounded-[16px] transition-all"
-                    style={{
-                      background: 'var(--color-surface)',
-                      color: 'var(--color-ink)',
-                      border: 'none',
-                      boxShadow: 'inset 4px 4px 8px rgba(0,0,0,0.04), inset -4px -4px 8px rgba(255,255,255,0.8)',
-                      outline: 'none',
-                    }}
+                    className="clay-input w-full p-4 text-[14px]"
                     autoFocus
                   />
                 </div>
@@ -292,18 +261,10 @@ export function LandingView({
                           key={mode}
                           type="button"
                           onClick={() => setEvaluationMode(mode)}
-                          className="text-left p-4 rounded-[16px] transition-all duration-200"
-                          style={{
-                            background: active ? 'var(--color-ink)' : 'var(--color-surface)',
-                            color: active ? '#fff' : 'var(--color-ink)',
-                            boxShadow: active 
-                              ? '4px 4px 12px rgba(0,0,0,0.1)' 
-                              : '4px 4px 8px rgba(0,0,0,0.04), -4px -4px 8px rgba(255,255,255,0.8)',
-                            border: '1px solid rgba(255, 255, 255, 0.4)',
-                          }}
+                          className={`text-left p-4 transition-all duration-200 ${active ? 'clay-btn-primary' : 'clay-btn'}`}
                         >
-                          <span className="block font-bold text-[13px] mb-1">{label}</span>
-                          <span className="block text-[11px] leading-snug opacity-70">{desc}</span>
+                          <span className="block font-bold text-[13px] mb-1" style={{ color: active ? '#fff' : 'var(--color-ink)' }}>{label}</span>
+                          <span className="block text-[11px] leading-snug opacity-70" style={{ color: active ? 'rgba(255,255,255,0.8)' : 'var(--color-muted)' }}>{desc}</span>
                         </button>
                       );
                     })}
@@ -314,13 +275,7 @@ export function LandingView({
                   <button
                     onClick={() => { setShowConfigModal(false); onStart(); }}
                     disabled={!canStart}
-                    className="w-full py-4 rounded-[16px] text-[15px] font-bold tracking-wide transition-all duration-200 flex items-center justify-center gap-2"
-                    style={{
-                      background: canStart ? 'var(--color-jin)' : 'var(--color-edge)',
-                      color: canStart ? '#fff' : 'var(--color-muted)',
-                      boxShadow: canStart ? '4px 4px 16px rgba(53,120,212,0.3)' : 'none',
-                      cursor: canStart ? 'pointer' : 'not-allowed',
-                    }}
+                    className={`w-full py-4 text-[15px] flex items-center justify-center gap-2 ${canStart ? 'clay-btn-primary' : 'clay-btn opacity-50 cursor-not-allowed'}`}
                   >
                     Start Evaluation
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

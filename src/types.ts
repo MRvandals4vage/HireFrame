@@ -1,4 +1,4 @@
-export type Screen = 'landing' | 'debate' | 'reveal' | 'interview';
+export type Screen = 'landing' | 'debate' | 'reveal' | 'interview' | 'technical' | 'live-interview';
 
 export interface InterviewMetric {
   name: string;

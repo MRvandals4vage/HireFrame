@@ -54,8 +54,13 @@ DEBATE RULES:
 
 OUTPUT FORMAT (follow EXACTLY, one per recruiter turn):
 CONFIDENCE: ALEX=<0-100>, MAYA=<0-100>, JIN=<0-100>
-RECRUITER: message text
+[RECRUITER_NAME]: message text
 COVERAGE: comma-separated from [Technical, Communication, Depth, Wildcard]
+
+Example:
+CONFIDENCE: ALEX=40, MAYA=70, JIN=50
+ALEX: Your claim about microservices is interesting, but I'm skeptical about the scale.
+COVERAGE: Technical, Depth
 
 After all exchanges, output a JSON block EXACTLY like:
 \`\`\`json
@@ -217,13 +222,13 @@ export function DebateView({
           continue;
         }
 
-        // Recruiter turn detection
-        const recruiterMatch = trimmed.match(/^(ALEX|MAYA|JIN):\s*(.*)/);
+        // Recruiter turn detection (supports standard, bolding, parentheticals, or RECRUITER prefix)
+        const recruiterMatch = trimmed.match(/^(?:\*\*?)?(?:RECRUITER:\s*)?(ALEX|MAYA|JIN)(?:[^\:]*):\s*(.*)/i);
         if (recruiterMatch) {
           if (currentMsg) {
             parsedMessages.push({ recruiter: currentMsg.recruiter, text: currentMsg.text.trim(), timestamp: Date.now() });
           }
-          const r = recruiterMatch[1] as RecruiterName;
+          const r = recruiterMatch[1].toUpperCase() as RecruiterName;
           currentMsg = { recruiter: r, text: recruiterMatch[2] };
           setCurrentSpeaker(r);
           setStatusText(getStatusLabel(r));
@@ -277,7 +282,9 @@ export function DebateView({
     abortRef.current = controller;
 
     const prompt = SYSTEM_PROMPT(targetRole, evaluationMode);
-    const userMsg = `Resume:\n${resumeText}\n\nTarget role: ${targetRole}\nEvaluation mode: ${evaluationMode}`;
+    // Truncate resume text to ~8000 characters to prevent API limits (Groq has 8000 TPM limit on on-demand tier)
+    const truncatedResume = resumeText.slice(0, 8000);
+    const userMsg = `Resume:\n${truncatedResume}\n\nTarget role: ${targetRole}\nEvaluation mode: ${evaluationMode}`;
 
     try {
       let response: Response | undefined;
@@ -285,7 +292,7 @@ export function DebateView({
       // --- Try Gemini first ---
       try {
         const r = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${geminiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${geminiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -306,13 +313,13 @@ export function DebateView({
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
           body: JSON.stringify({
-            model: 'openai/gpt-oss-20b',
+            model: 'llama-3.3-70b-versatile',
             messages: [
               { role: 'system', content: prompt },
               { role: 'user',   content: userMsg },
             ],
             temperature: 1,
-            max_tokens: 8192,
+            max_tokens: 2000,
             stream: true,
           }),
           signal: controller.signal,
@@ -363,6 +370,7 @@ export function DebateView({
       processStreamBuffer(fullTextRef.current, true);
 
     } catch (err: any) {
+      console.error("Debate stream failed:", err);
       if (err.name !== 'AbortError') {
         setError(err.message || 'Something went wrong. Please try again.');
       }
