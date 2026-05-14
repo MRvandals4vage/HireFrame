@@ -1,13 +1,25 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { motion } from 'motion/react';
+import type { EvaluationMode } from '../types';
 
 interface Props {
   resumeText: string;
   setResumeText: (text: string) => void;
   targetRole: string;
   setTargetRole: (role: string) => void;
+  evaluationMode: EvaluationMode;
+  setEvaluationMode: (mode: EvaluationMode) => void;
   onStart: () => void;
 }
+
+const EVALUATION_MODES: { mode: EvaluationMode; icon: string; desc: string }[] = [
+  { mode: 'FAANG',              icon: '⚡', desc: 'Algorithms, scale, system design' },
+  { mode: 'Startup',            icon: '🚀', desc: 'Speed, ownership, product sense' },
+  { mode: 'Research Lab',       icon: '🔬', desc: 'Depth, rigor, novel contributions' },
+  { mode: 'Fintech',            icon: '📊', desc: 'Compliance, reliability, data' },
+  { mode: 'ML Engineering',     icon: '🧠', desc: 'Models, pipelines, benchmarks' },
+  { mode: 'Frontend Engineering',icon: '🎨', desc: 'UX depth, perf, component arch' },
+];
 
 const recruiters = [
   { initials: 'AX', name: 'Alex', role: 'The Skeptic', colorClass: 'bg-alex' },
@@ -64,6 +76,8 @@ export function LandingView({
   setResumeText,
   targetRole,
   setTargetRole,
+  evaluationMode,
+  setEvaluationMode,
   onStart,
 }: Props) {
   const [isDragging, setIsDragging] = useState(false);
@@ -279,6 +293,30 @@ export function LandingView({
             />
           </div>
 
+
+          {/* Evaluation mode picker */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted uppercase tracking-wider block">
+              Evaluation Mode
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {EVALUATION_MODES.map(({ mode, icon, desc }) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setEvaluationMode(mode)}
+                  className={`text-left px-3 py-2.5 rounded-lg border text-xs transition-all duration-150 cursor-pointer ${
+                    evaluationMode === mode
+                      ? 'border-ink bg-ink text-white'
+                      : 'border-edge bg-canvas text-muted hover:border-muted hover:text-ink'
+                  }`}
+                >
+                  <span className="block mb-0.5">{icon} <span className="font-medium">{mode}</span></span>
+                  <span className="opacity-70 leading-tight block">{desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Start button */}
           <button

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import type { ScoreData, Message } from '../types';
+import type { ScoreData, Message, RecruiterName } from '../types';
 
 interface Props {
   scoreData: ScoreData;
@@ -200,6 +200,82 @@ ${messages.map((m) => `  [${m.recruiter}] ${m.text}`).join('\n')}
             {scoreData.strongest_asset}
           </p>
         </motion.div>
+
+        {/* Recruiter Verdict Cards */}
+        {scoreData.recruiter_verdicts && scoreData.recruiter_verdicts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.4 }}
+            className="mb-6"
+          >
+            <h3 className="text-xs font-medium text-muted uppercase tracking-wider mb-3">Committee verdicts</h3>
+            <div className="grid grid-cols-3 gap-3">
+              {scoreData.recruiter_verdicts.map(({ recruiter, stance, reasoning }) => {
+                const colors: Record<RecruiterName, string> = { ALEX: '#C0392B', MAYA: '#1D9E75', JIN: '#2C6FBF' };
+                const names: Record<RecruiterName, string>  = { ALEX: 'Alex', MAYA: 'Maya', JIN: 'Jin' };
+                const stanceColors: Record<string, string>  = { hire: '#1D9E75', 'no-hire': '#C0392B', maybe: '#D97706' };
+                const stanceLabels: Record<string, string>  = { hire: 'Hire ✓', 'no-hire': 'No hire ✗', maybe: 'Maybe ?' };
+                return (
+                  <div key={recruiter} className="bg-surface border border-edge rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-medium flex-shrink-0"
+                        style={{ backgroundColor: colors[recruiter] }}
+                      >
+                        {recruiter === 'ALEX' ? 'AX' : recruiter === 'MAYA' ? 'MY' : 'JN'}
+                      </div>
+                      <span className="text-xs font-medium text-ink">{names[recruiter]}</span>
+                    </div>
+                    <span
+                      className="inline-block text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded mb-2"
+                      style={{ color: stanceColors[stance], backgroundColor: stanceColors[stance] + '18' }}
+                    >
+                      {stanceLabels[stance]}
+                    </span>
+                    <p className="text-xs text-muted leading-relaxed">{reasoning}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Predicted Interview Questions */}
+        {scoreData.predicted_questions && scoreData.predicted_questions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.85, duration: 0.4 }}
+            className="mb-8"
+          >
+            <h3 className="text-xs font-medium text-muted uppercase tracking-wider mb-3">Expect these questions</h3>
+            <div className="space-y-2">
+              {scoreData.predicted_questions.map(({ question, recruiter, difficulty }, i) => {
+                const colors: Record<RecruiterName, string> = { ALEX: '#C0392B', MAYA: '#1D9E75', JIN: '#2C6FBF' };
+                const names: Record<RecruiterName, string>  = { ALEX: 'Alex', MAYA: 'Maya', JIN: 'Jin' };
+                const diffColors: Record<string, string>    = { easy: '#1D9E75', medium: '#D97706', hard: '#C0392B' };
+                return (
+                  <div key={i} className="bg-surface border border-edge rounded-lg px-4 py-3 flex gap-3 items-start">
+                    <span
+                      className="mt-0.5 flex-shrink-0 text-[10px] font-bold uppercase tracking-wider w-5 text-center"
+                      style={{ color: colors[recruiter] }}
+                    >
+                      {recruiter === 'ALEX' ? 'AX' : recruiter === 'MAYA' ? 'MY' : 'JN'}
+                    </span>
+                    <p className="text-sm text-ink flex-1 leading-relaxed">{question}</p>
+                    <span
+                      className="flex-shrink-0 text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded"
+                      style={{ color: diffColors[difficulty], backgroundColor: diffColors[difficulty] + '18' }}
+                    >
+                      {difficulty}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
 
         {/* Bottom Buttons */}
         <motion.div

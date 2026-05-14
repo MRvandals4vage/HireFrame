@@ -3,12 +3,13 @@ import { AnimatePresence, motion } from 'motion/react';
 import { LandingView } from './components/LandingView';
 import { DebateView } from './components/DebateView';
 import { ScoreReveal } from './components/ScoreReveal';
-import type { Screen, Message, ScoreData, CoverageTopic } from './types';
+import type { Screen, Message, ScoreData, CoverageTopic, EvaluationMode } from './types';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('landing');
   const [resumeText, setResumeText] = useState('');
   const [targetRole, setTargetRole] = useState('');
+  const [evaluationMode, setEvaluationMode] = useState<EvaluationMode>('FAANG');
   const [messages, setMessages] = useState<Message[]>([]);
   const [coverageTopics, setCoverageTopics] = useState<Set<CoverageTopic>>(new Set());
   const [scoreData, setScoreData] = useState<ScoreData | null>(null);
@@ -28,6 +29,7 @@ export default function App() {
   const handleRestart = () => {
     setResumeText('');
     setTargetRole('');
+    setEvaluationMode('FAANG');
     setMessages([]);
     setCoverageTopics(new Set());
     setScoreData(null);
@@ -96,6 +98,8 @@ export default function App() {
                 setResumeText={setResumeText}
                 targetRole={targetRole}
                 setTargetRole={setTargetRole}
+                evaluationMode={evaluationMode}
+                setEvaluationMode={setEvaluationMode}
                 onStart={handleStart}
               />
             </motion.div>
@@ -113,6 +117,7 @@ export default function App() {
               <DebateView
                 resumeText={resumeText}
                 targetRole={targetRole}
+                evaluationMode={evaluationMode}
                 messages={messages}
                 setMessages={setMessages}
                 coverageTopics={coverageTopics}

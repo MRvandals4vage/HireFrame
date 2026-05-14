@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import type { Message, ScoreData, CoverageTopic, RecruiterName } from '../types';
+import type { Message, ScoreData, CoverageTopic, RecruiterName, RecruiterConfidence, EvaluationMode } from '../types';
 
 interface Props {
   resumeText: string;
   targetRole: string;
+  evaluationMode: EvaluationMode;
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   coverageTopics: Set<CoverageTopic>;
@@ -12,10 +13,10 @@ interface Props {
   onComplete: (data: ScoreData) => void;
 }
 
-const RECRUITER_CONFIG: Record<RecruiterName, { name: string; role: string; color: string; tint: string; textColor: string }> = {
-  ALEX: { name: 'Alex', role: 'The Skeptic', color: '#C0392B', tint: 'rgba(192,57,43,0.08)', textColor: 'text-alex' },
-  MAYA: { name: 'Maya', role: 'Your Champion', color: '#1D9E75', tint: 'rgba(29,158,117,0.08)', textColor: 'text-maya' },
-  JIN:  { name: 'Jin',  role: 'The Verdict',  color: '#2C6FBF', tint: 'rgba(44,111,191,0.08)', textColor: 'text-jin'  },
+const RECRUITER_CONFIG: Record<RecruiterName, { name: string; role: string; color: string; tint: string }> = {
+  ALEX: { name: 'Alex', role: 'Staff Engineer', color: '#C0392B', tint: 'rgba(192,57,43,0.07)' },
+  MAYA: { name: 'Maya', role: 'Eng Manager',   color: '#1D9E75', tint: 'rgba(29,158,117,0.07)' },
+  JIN:  { name: 'Jin',  role: 'VP Engineering', color: '#2C6FBF', tint: 'rgba(44,111,191,0.07)'  },
 };
 
 const COVERAGE_TOPICS: CoverageTopic[] = ['Technical', 'Communication', 'Depth', 'Wildcard'];
@@ -26,40 +27,75 @@ const COVERAGE_COLORS: Record<CoverageTopic, string> = {
   Wildcard: '#D97706',
 };
 
-const SYSTEM_PROMPT = (role: string) => `You are simulating a hiring panel debate for the role of: ${role}
+const MODE_CONTEXT: Record<EvaluationMode, string> = {
+  'FAANG': 'Evaluation context: FAANG-style. Alex hammers on algorithmic complexity, O-notation, and distributed systems at scale (millions of QPS). Maya looks for evidence of shipping real features, not just LeetCode prep. Jin cares about the candidate\'s ability to navigate ambiguity at scale.',
+  'Startup': 'Evaluation context: Early-stage Startup. Alex is skeptical of over-engineering and academic abstractions — he wants to see velocity and pragmatic tradeoffs. Maya champions product intuition and ownership mentality. Jin weighs learning curve vs. time-to-productivity.',
+  'Research Lab': 'Evaluation context: Research Lab (e.g. DeepMind, FAIR, MSR). Alex probes the depth of prior research, novel methodologies, and publication record. Maya looks for intellectual curiosity and ability to bridge theory to engineering. Jin evaluates research potential and scientific rigor.',
+  'Fintech': 'Evaluation context: Fintech/Financial Systems. Alex scrutinizes system reliability, data integrity guarantees, and compliance-awareness. Maya champions velocity within regulated environments. Jin considers risk tolerance, auditability, and domain knowledge.',
+  'ML Engineering': 'Evaluation context: ML Engineering. Alex dissects model architecture choices, training pipeline efficiency, and benchmark credibility. Maya defends practical ML engineering (data pipelines, inference latency, model serving). Jin evaluates the end-to-end ML lifecycle understanding.',
+  'Frontend Engineering': 'Evaluation context: Senior Frontend Engineering. Alex questions performance bottlenecks, bundle size strategy, and component architecture tradeoffs. Maya celebrates strong product instincts, accessibility awareness, and design systems experience. Jin evaluates cross-functional collaboration and web platform depth.',
+};
 
-Three senior engineering leaders evaluate the candidate's profile in a rigorous hiring committee debate:
-- ALEX (The Skeptic / Staff Engineer): Extremely analytical, deeply technical, and sharply critical. Instantly spots architectural flaws, inflated claims, and lack of scale. Speaks in concise, high-signal technical terms.
-- MAYA (The Champion / Engineering Manager): Focuses on velocity, product impact, and learning curve. Brilliantly connects isolated projects to enterprise value. Defends the candidate by finding hidden technical depth and pragmatic engineering decisions.
-- JIN (The Neutral / VP of Engineering): Highly intellectual, philosophical about system design, and strictly data-driven. Weighs technical debt against business value. Delivers the final synthesis and verdict with profound market context.
+const SYSTEM_PROMPT = (role: string, mode: EvaluationMode) => `You are simulating a rigorous hiring committee debate for the role of: ${role}
 
-Produce exactly 6 exchanges total (2 per recruiter, interleaved naturally).
-Make the debate sound like an intense, highly technical evaluation at a top-tier tech company. Use specific technical jargon, argue about architecture, scalability, tradeoffs, and system design implications of the candidate's resume claims. Do not be generic.
+${MODE_CONTEXT[mode]}
 
-Format each message EXACTLY as:
+Three senior engineering leaders conduct this debate:
+- ALEX (The Skeptic / Staff Engineer): Extremely technical and sharply critical. Dissects architectural choices, spots inflated claims instantly, quantifies everything. Uses domain-specific jargon naturally. Never generic.
+- MAYA (The Champion / Eng Manager): Focuses on pragmatic engineering decisions, product velocity, and team fit. Finds the strongest possible interpretation of each resume claim and connects it to real business value.
+- JIN (The Neutral / VP Engineering): Philosophical, market-aware, and strictly evidence-driven. Synthesizes both perspectives, references industry benchmarks, and delivers high-signal verdict statements.
+
+DEBATE RULES:
+- Produce exactly 8 exchanges total (interleaved naturally, not evenly distributed).
+- Each message must cite a SPECIFIC, VERBATIM phrase or detail from the resume.
+- Recruiters MUST reference each other by name: "As Alex just pointed out…", "I'd push back on Maya's read here…"
+- Recruiters update their confidence in the candidate after each exchange.
+- Make it intellectually intense — argue about architecture, tradeoffs, evidence of mastery vs. cargo-cult.
+
+OUTPUT FORMAT (follow EXACTLY, one per recruiter turn):
+CONFIDENCE: ALEX=<0-100>, MAYA=<0-100>, JIN=<0-100>
 RECRUITER: message text
-COVERAGE: Technical|Communication|Depth|Wildcard (comma-separated topics this message covers)
+COVERAGE: comma-separated from [Technical, Communication, Depth, Wildcard]
 
-Each message must cite a SPECIFIC line or detail from the resume and dissect it intellectually.
-After all 6 exchanges output a JSON block:
+After all exchanges, output a JSON block EXACTLY like:
 \`\`\`json
 {
-  "readiness_score": 0-100,
-  "verdict": "one sentence",
-  "hire_blockers": ["specific blocker 1", "specific blocker 2"],
-  "hire_accelerators": ["specific fix 1 (1 day)", "specific fix 2 (1 week)"],
-  "strongest_asset": "the one thing even Alex couldn't argue with",
+  "readiness_score": <0-100>,
+  "verdict": "<one sharp, specific sentence — no generic language>",
+  "hire_blockers": ["<specific technical blocker>", "<specific gap>"],
+  "hire_accelerators": ["<specific 1-day fix>", "<specific 1-week improvement>"],
+  "strongest_asset": "<the one thing even Alex conceded on>",
   "thirty_day_plan": [
-    {"action": "specific action", "impact": "high", "effort": "1hr"},
-    {"action": "specific action", "impact": "medium", "effort": "1day"},
-    {"action": "specific action", "impact": "high", "effort": "1week"}
+    {"action": "<concrete action>", "impact": "high", "effort": "1hr"},
+    {"action": "<concrete action>", "impact": "medium", "effort": "1day"},
+    {"action": "<concrete action>", "impact": "high", "effort": "1week"}
+  ],
+  "predicted_questions": [
+    {"question": "<realistic technical interview question referencing a resume claim>", "recruiter": "ALEX", "difficulty": "hard"},
+    {"question": "<behavioral question targeting a gap>", "recruiter": "MAYA", "difficulty": "medium"},
+    {"question": "<system design or leadership question>", "recruiter": "JIN", "difficulty": "hard"}
+  ],
+  "recruiter_verdicts": [
+    {"recruiter": "ALEX", "stance": "<hire|no-hire|maybe>", "reasoning": "<one sentence>"},
+    {"recruiter": "MAYA", "stance": "<hire|no-hire|maybe>", "reasoning": "<one sentence>"},
+    {"recruiter": "JIN", "stance": "<hire|no-hire|maybe>", "reasoning": "<one sentence>"}
   ]
 }
 \`\`\``;
 
+const DEFAULT_CONFIDENCE: RecruiterConfidence = { ALEX: 50, MAYA: 50, JIN: 50 };
+
+// Safely extract fenced JSON even if stream ends abruptly
+function extractJSON(text: string): string | null {
+  const match = text.match(/```json\s*([\s\S]*?)(?:```|$)/);
+  if (!match) return null;
+  return match[1].trim();
+}
+
 export function DebateView({
   resumeText,
   targetRole,
+  evaluationMode,
   messages,
   setMessages,
   coverageTopics,
@@ -68,161 +104,36 @@ export function DebateView({
 }: Props) {
   const [currentSpeaker, setCurrentSpeaker] = useState<RecruiterName | null>(null);
   const [currentPartialText, setCurrentPartialText] = useState('');
-  const [statusText, setStatusText] = useState('Starting the debate…');
+  const [statusText, setStatusText] = useState('Convening the hiring committee…');
   const [error, setError] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [confidence, setConfidence] = useState<RecruiterConfidence>(DEFAULT_CONFIDENCE);
+
   const abortRef = useRef<AbortController | null>(null);
-  const columnRefs = useRef<Record<RecruiterName, HTMLDivElement | null>>({
-    ALEX: null,
-    MAYA: null,
-    JIN: null,
-  });
+  const columnRefs = useRef<Record<RecruiterName, HTMLDivElement | null>>({ ALEX: null, MAYA: null, JIN: null });
+
+  // Use refs for values needed inside the stream loop to avoid stale closures
+  const fullTextRef = useRef('');
+  const isStreamingRef = useRef(false);
 
   const scrollToBottom = useCallback((recruiter: RecruiterName) => {
     const el = columnRefs.current[recruiter];
-    if (el) {
-      el.scrollTop = el.scrollHeight;
-    }
+    if (el) el.scrollTop = el.scrollHeight;
   }, []);
 
+  const STATUS_LINES: Record<RecruiterName, string[]> = {
+    ALEX: ['Alex is dissecting your claims…', 'Alex is probing for gaps…', 'Alex is stress-testing the architecture…'],
+    MAYA: ['Maya is finding your strongest angle…', 'Maya is championing your work…', 'Maya is making the case for you…'],
+    JIN:  ['Jin is weighing the evidence…', 'Jin is consulting market data…', 'Jin is forming the final synthesis…'],
+  };
+
   const getStatusLabel = (name: RecruiterName) => {
-    const labels: Record<RecruiterName, string[]> = {
-      ALEX: ['Alex is questioning your experience…', 'Alex is probing for gaps…'],
-      MAYA: ['Maya is defending your project experience…', 'Maya is championing your strengths…'],
-      JIN:  ['Jin is weighing the evidence…', 'Jin is forming the verdict…'],
-    };
-    const arr = labels[name];
+    const arr = STATUS_LINES[name];
     return arr[Math.floor(Math.random() * arr.length)];
   };
 
-  const startDebate = useCallback(async () => {
-    if (isStreaming) return;
-    setIsStreaming(true);
-    setHasStarted(true);
-    setError(null);
-    setMessages([]);
-    setCoverageTopics(new Set());
-    setCurrentPartialText('');
-    setCurrentSpeaker(null);
-
-    const envKey = typeof import.meta !== 'undefined'
-      ? (import.meta as any).env?.VITE_GEMINI_API_KEY || ''
-      : '';
-    const key = envKey;
-
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    try {
-      let response;
-      try {
-        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${key}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            systemInstruction: {
-              parts: [{ text: SYSTEM_PROMPT(targetRole) }]
-            },
-            contents: [
-              {
-                role: 'user',
-                parts: [{ text: `Resume:\n${resumeText}\n\nTarget role: ${targetRole}` }],
-              },
-            ],
-            generationConfig: {
-              maxOutputTokens: 4096,
-            }
-          }),
-          signal: controller.signal,
-        });
-
-        if (!response.ok) throw new Error('Gemini API Error');
-      } catch (geminiError) {
-        // Fallback to Groq if Gemini fails
-        const groqKey = typeof import.meta !== 'undefined'
-          ? (import.meta as any).env?.VITE_GROQ_API_KEY || ''
-          : '';
-        
-        response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${groqKey}`
-          },
-          body: JSON.stringify({
-            model: 'openai/gpt-oss-20b',
-            messages: [
-              { role: 'system', content: SYSTEM_PROMPT(targetRole) },
-              { role: 'user', content: `Resume:\n${resumeText}\n\nTarget role: ${targetRole}` }
-            ],
-            temperature: 1,
-            max_tokens: 4096,
-            top_p: 1,
-            stream: true
-          }),
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          const errBody = await response.text();
-          throw new Error(`Fallback API error ${response.status}: ${errBody}`);
-        }
-      }
-
-      const reader = response.body!.getReader();
-      const decoder = new TextDecoder();
-
-      let buffer = '';
-      let fullText = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        let newlineIndex;
-        while ((newlineIndex = buffer.indexOf('\n')) >= 0) {
-          const line = buffer.slice(0, newlineIndex).trim();
-          buffer = buffer.slice(newlineIndex + 1);
-
-          if (line.startsWith('data: ')) {
-            try {
-              let textChunk = '';
-              
-              if (line.includes('"candidates"')) {
-                // Gemini format
-                const data = JSON.parse(line.slice(6));
-                textChunk = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-              } else if (line.includes('"choices"')) {
-                // Groq (OpenAI) format
-                const data = JSON.parse(line.slice(6));
-                textChunk = data?.choices?.[0]?.delta?.content || '';
-              }
-
-              if (textChunk) {
-                fullText += textChunk;
-                processStreamBuffer(fullText);
-              }
-            } catch (e) {
-              // Ignore partial or malformed JSON silently to allow stream to continue
-            }
-          }
-        }
-      }
-
-      // Final processing
-      processStreamBuffer(fullText, true);
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        setError(err.message || 'Something went wrong. Please try again.');
-      }
-    } finally {
-      setIsStreaming(false);
-    }
-  }, [resumeText, targetRole, isStreaming]);
-
+  // Core stream parser - runs on the entire accumulated text on every chunk
   const processStreamBuffer = useCallback(
     (text: string, isFinal = false) => {
       const lines = text.split(/\r?\n/);
@@ -230,151 +141,261 @@ export function DebateView({
       const topics = new Set<CoverageTopic>();
       let currentMsg: { recruiter: RecruiterName; text: string } | null = null;
       let inJson = false;
-      let jsonStr = '';
+      let jsonLines: string[] = [];
       let jsonDone = false;
+      let latestConfidence: RecruiterConfidence | null = null;
 
       for (const line of lines) {
         const trimmed = line.trim();
 
-        // JSON block detection
+        // Fenced JSON block detection
         if (trimmed.startsWith('```json')) {
           inJson = true;
-          jsonStr = '';
+          jsonLines = [];
           continue;
         }
         if (inJson) {
           if (trimmed === '```') {
             inJson = false;
             jsonDone = true;
-            try {
-              const parsed = JSON.parse(jsonStr);
-              if (isFinal && parsed.readiness_score !== undefined) {
-                // Push final current message if any
-                if (currentMsg) {
-                  parsedMessages.push({
-                    recruiter: currentMsg.recruiter,
-                    text: currentMsg.text.trim(),
-                    timestamp: Date.now(),
-                  });
+            const jsonStr = jsonLines.join('\n');
+            if (isFinal) {
+              try {
+                const parsed = JSON.parse(jsonStr);
+                if (parsed.readiness_score !== undefined) {
+                  if (currentMsg) {
+                    parsedMessages.push({ recruiter: currentMsg.recruiter, text: currentMsg.text.trim(), timestamp: Date.now() });
+                  }
+                  setMessages([...parsedMessages]);
+                  setCurrentPartialText('');
+                  setCurrentSpeaker(null);
+                  setStatusText('Committee has reached a decision.');
+                  setTimeout(() => onComplete(parsed), 700);
+                  return;
                 }
-                setMessages([...parsedMessages]);
-                setCurrentPartialText('');
-                setCurrentSpeaker(null);
-                setStatusText('Debate complete.');
-                setTimeout(() => onComplete(parsed), 600);
-                return;
+              } catch {
+                // Try lenient extraction as last resort
+                const fallback = extractJSON('```json\n' + jsonStr + '\n```');
+                if (fallback) {
+                  try {
+                    const parsed = JSON.parse(fallback);
+                    if (parsed.readiness_score !== undefined) {
+                      if (currentMsg) {
+                        parsedMessages.push({ recruiter: currentMsg.recruiter, text: currentMsg.text.trim(), timestamp: Date.now() });
+                      }
+                      setMessages([...parsedMessages]);
+                      setCurrentPartialText('');
+                      setCurrentSpeaker(null);
+                      setStatusText('Committee has reached a decision.');
+                      setTimeout(() => onComplete(parsed), 700);
+                      return;
+                    }
+                  } catch { /* still malformed */ }
+                }
               }
-            } catch {
-              // incomplete JSON, continue
             }
             continue;
           }
-          jsonStr += line + '\n';
+          jsonLines.push(line);
           continue;
         }
         if (jsonDone) continue;
 
-        // Recruiter message detection
-        if (trimmed.startsWith('ALEX:')) {
-          if (currentMsg) {
-            parsedMessages.push({
-              recruiter: currentMsg.recruiter,
-              text: currentMsg.text.trim(),
-              timestamp: Date.now(),
-            });
-          }
-          currentMsg = { recruiter: 'ALEX', text: trimmed.slice(5).trim() };
-          setCurrentSpeaker('ALEX');
-          setStatusText(getStatusLabel('ALEX'));
-        } else if (trimmed.startsWith('MAYA:')) {
-          if (currentMsg) {
-            parsedMessages.push({
-              recruiter: currentMsg.recruiter,
-              text: currentMsg.text.trim(),
-              timestamp: Date.now(),
-            });
-          }
-          currentMsg = { recruiter: 'MAYA', text: trimmed.slice(5).trim() };
-          setCurrentSpeaker('MAYA');
-          setStatusText(getStatusLabel('MAYA'));
-        } else if (trimmed.startsWith('JIN:')) {
-          if (currentMsg) {
-            parsedMessages.push({
-              recruiter: currentMsg.recruiter,
-              text: currentMsg.text.trim(),
-              timestamp: Date.now(),
-            });
-          }
-          currentMsg = { recruiter: 'JIN', text: trimmed.slice(4).trim() };
-          setCurrentSpeaker('JIN');
-          setStatusText(getStatusLabel('JIN'));
-        } else if (trimmed.startsWith('COVERAGE:')) {
-          const parts = trimmed
-            .slice(9)
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean) as CoverageTopic[];
-          parts.forEach((t) => {
-            if (COVERAGE_TOPICS.includes(t)) topics.add(t);
+        // CONFIDENCE line parsing
+        if (trimmed.startsWith('CONFIDENCE:')) {
+          const conf: RecruiterConfidence = { ALEX: 50, MAYA: 50, JIN: 50 };
+          const parts = trimmed.slice(11).split(',');
+          parts.forEach((p) => {
+            const [name, val] = p.trim().split('=');
+            const n = name?.trim() as RecruiterName;
+            const v = parseInt(val ?? '50', 10);
+            if ((n === 'ALEX' || n === 'MAYA' || n === 'JIN') && !isNaN(v)) {
+              conf[n] = Math.min(100, Math.max(0, v));
+            }
           });
+          latestConfidence = conf;
+          continue;
+        }
+
+        // Recruiter turn detection
+        const recruiterMatch = trimmed.match(/^(ALEX|MAYA|JIN):\s*(.*)/);
+        if (recruiterMatch) {
+          if (currentMsg) {
+            parsedMessages.push({ recruiter: currentMsg.recruiter, text: currentMsg.text.trim(), timestamp: Date.now() });
+          }
+          const r = recruiterMatch[1] as RecruiterName;
+          currentMsg = { recruiter: r, text: recruiterMatch[2] };
+          setCurrentSpeaker(r);
+          setStatusText(getStatusLabel(r));
+        } else if (trimmed.startsWith('COVERAGE:')) {
+          const parts = trimmed.slice(9).split(',').map((s) => s.trim()).filter(Boolean) as CoverageTopic[];
+          parts.forEach((t) => { if (COVERAGE_TOPICS.includes(t)) topics.add(t); });
         } else if (currentMsg && trimmed.length > 0) {
           currentMsg.text += ' ' + trimmed;
         }
       }
 
-      // Update coverage
+      // Flush confidence update to state
+      if (latestConfidence) setConfidence(latestConfidence);
+
+      // Flush coverage
       setCoverageTopics((prev) => {
         const next = new Set(prev);
         topics.forEach((t) => next.add(t));
         return next;
       });
 
-      // Update completed messages
+      // Commit completed messages
       setMessages([...parsedMessages]);
 
-      // Update partial text for current in-progress message
+      // Stream the in-progress message
       if (currentMsg) {
         setCurrentPartialText(currentMsg.text.trim());
         setCurrentSpeaker(currentMsg.recruiter);
         scrollToBottom(currentMsg.recruiter);
       }
     },
-    [onComplete, scrollToBottom],
+    [onComplete, scrollToBottom, setMessages, setCoverageTopics],
   );
 
-  // Start debate on mount
+  const startDebate = useCallback(async () => {
+    if (isStreamingRef.current) return;
+    isStreamingRef.current = true;
+    setIsStreaming(true);
+    setHasStarted(true);
+    setError(null);
+    setMessages([]);
+    setCoverageTopics(new Set());
+    setCurrentPartialText('');
+    setCurrentSpeaker(null);
+    setConfidence(DEFAULT_CONFIDENCE);
+    fullTextRef.current = '';
+
+    const geminiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
+    const groqKey   = (import.meta as any).env?.VITE_GROQ_API_KEY   || '';
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const prompt = SYSTEM_PROMPT(targetRole, evaluationMode);
+    const userMsg = `Resume:\n${resumeText}\n\nTarget role: ${targetRole}\nEvaluation mode: ${evaluationMode}`;
+
+    try {
+      let response: Response | undefined;
+
+      // --- Try Gemini first ---
+      try {
+        const r = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: prompt }] },
+              contents: [{ role: 'user', parts: [{ text: userMsg }] }],
+              generationConfig: { maxOutputTokens: 8192 },
+            }),
+            signal: controller.signal,
+          }
+        );
+        if (r.ok) response = r;
+        else throw new Error(`Gemini ${r.status}`);
+      } catch (geminiErr) {
+        if ((geminiErr as Error).name === 'AbortError') throw geminiErr;
+        // --- Fallback to Groq ---
+        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+          body: JSON.stringify({
+            model: 'openai/gpt-oss-20b',
+            messages: [
+              { role: 'system', content: prompt },
+              { role: 'user',   content: userMsg },
+            ],
+            temperature: 1,
+            max_tokens: 8192,
+            stream: true,
+          }),
+          signal: controller.signal,
+        });
+        if (!r.ok) {
+          const body = await r.text();
+          throw new Error(`API error ${r.status}: ${body}`);
+        }
+        response = r;
+      }
+
+      if (!response) throw new Error('No API response received.');
+
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        let idx: number;
+        while ((idx = buffer.indexOf('\n')) >= 0) {
+          const rawLine = buffer.slice(0, idx).trim();
+          buffer = buffer.slice(idx + 1);
+
+          if (!rawLine.startsWith('data: ')) continue;
+          const payload = rawLine.slice(6).trim();
+          if (payload === '[DONE]') continue;
+
+          try {
+            let chunk = '';
+            if (payload.includes('"candidates"')) {
+              chunk = JSON.parse(payload)?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+            } else if (payload.includes('"choices"')) {
+              chunk = JSON.parse(payload)?.choices?.[0]?.delta?.content ?? '';
+            }
+            if (chunk) {
+              fullTextRef.current += chunk;
+              processStreamBuffer(fullTextRef.current);
+            }
+          } catch { /* skip malformed chunk */ }
+        }
+      }
+
+      // Final pass — commit everything and fire onComplete
+      processStreamBuffer(fullTextRef.current, true);
+
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        setError(err.message || 'Something went wrong. Please try again.');
+      }
+    } finally {
+      isStreamingRef.current = false;
+      setIsStreaming(false);
+    }
+  }, [resumeText, targetRole, evaluationMode, processStreamBuffer, setMessages, setCoverageTopics]);
+
   useEffect(() => {
     if (messages.length > 0 && hasStarted) {
-      // Stream is already done or in progress from previous navigation
-      if (!isStreaming) setStatusText('Debate complete.');
+      if (!isStreamingRef.current) setStatusText('Committee has reached a decision.');
       return;
     }
-    if (!hasStarted) {
-      startDebate();
-    }
-    return () => {
-      abortRef.current?.abort();
-    };
+    if (!hasStarted) startDebate();
+    return () => { abortRef.current?.abort(); };
   }, []);
 
-  const alexMessages = messages.filter((m) => m.recruiter === 'ALEX');
-  const mayaMessages = messages.filter((m) => m.recruiter === 'MAYA');
-  const jinMessages = messages.filter((m) => m.recruiter === 'JIN');
-
   const columnData: { recruiter: RecruiterName; msgs: Message[] }[] = [
-    { recruiter: 'ALEX', msgs: alexMessages },
-    { recruiter: 'MAYA', msgs: mayaMessages },
-    { recruiter: 'JIN', msgs: jinMessages },
+    { recruiter: 'ALEX', msgs: messages.filter((m) => m.recruiter === 'ALEX') },
+    { recruiter: 'MAYA', msgs: messages.filter((m) => m.recruiter === 'MAYA') },
+    { recruiter: 'JIN',  msgs: messages.filter((m) => m.recruiter === 'JIN')  },
   ];
 
   return (
     <div className="min-h-screen flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full gap-4">
-      {/* Coverage Bar */}
+
+      {/* Header bar */}
       <div className="bg-surface border border-edge rounded-xl p-5 shadow-sm flex-shrink-0">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-lg font-medium text-ink">Live Evaluation</h2>
-            <p className="text-sm text-muted mt-0.5">{targetRole}</p>
+            <p className="text-sm text-muted mt-0.5">{targetRole} · <span className="font-medium text-ink">{evaluationMode}</span></p>
           </div>
           <div className="flex items-center gap-2">
             {isStreaming && <span className="w-2 h-2 rounded-full bg-maya animate-pulse-dot" />}
@@ -384,6 +405,7 @@ export function DebateView({
           </div>
         </div>
 
+        {/* Coverage bar */}
         <div className="flex gap-1.5 h-2 w-full">
           {COVERAGE_TOPICS.map((topic, i) => (
             <div
@@ -407,9 +429,35 @@ export function DebateView({
             </span>
           ))}
         </div>
+
+        {/* Recruiter confidence bars */}
+        <div className="mt-5 grid grid-cols-3 gap-4">
+          {(Object.keys(RECRUITER_CONFIG) as RecruiterName[]).map((r) => {
+            const cfg = RECRUITER_CONFIG[r];
+            const pct = confidence[r];
+            const label = pct >= 70 ? 'Leaning yes' : pct >= 40 ? 'Undecided' : 'Skeptical';
+            return (
+              <div key={r}>
+                <div className="flex justify-between items-baseline mb-1.5">
+                  <span className="text-xs font-medium text-ink">{cfg.name}</span>
+                  <span className="text-[10px] font-medium" style={{ color: cfg.color }}>{pct}% · {label}</span>
+                </div>
+                <div className="h-1.5 w-full bg-edge rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{ backgroundColor: cfg.color }}
+                    initial={{ width: '50%' }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Error State */}
+      {/* Error state */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -418,9 +466,7 @@ export function DebateView({
         >
           <div className="w-10 h-10 rounded-full bg-alex/10 flex items-center justify-center flex-shrink-0">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C0392B" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
+              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
           </div>
           <div className="flex-1 text-center sm:text-left">
@@ -428,11 +474,7 @@ export function DebateView({
             <p className="text-xs text-muted">{error}</p>
           </div>
           <button
-            onClick={() => {
-              setError(null);
-              setHasStarted(false);
-              setTimeout(() => startDebate(), 100);
-            }}
+            onClick={() => { setError(null); setHasStarted(false); isStreamingRef.current = false; setTimeout(() => startDebate(), 100); }}
             className="bg-dark text-white text-sm px-5 py-2.5 rounded-lg hover:scale-[1.02] active:scale-[0.98] transition-transform cursor-pointer"
           >
             Retry
@@ -440,7 +482,7 @@ export function DebateView({
         </motion.div>
       )}
 
-      {/* Three Column Debate */}
+      {/* Three-column debate */}
       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 min-h-0">
         {columnData.map(({ recruiter, msgs }) => {
           const config = RECRUITER_CONFIG[recruiter];
@@ -449,27 +491,24 @@ export function DebateView({
             <div
               key={recruiter}
               className="flex flex-col bg-surface border border-edge rounded-xl overflow-hidden min-h-[300px] md:min-h-0"
+              style={{ boxShadow: isCurrentSpeaker ? `0 0 0 1.5px ${config.color}30` : undefined }}
             >
-              {/* Column Header */}
+              {/* Column header */}
               <div className="border-b border-edge px-4 py-3 flex items-center gap-3 flex-shrink-0">
                 <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0"
                   style={{ backgroundColor: config.color }}
                 >
                   {recruiter === 'ALEX' ? 'AX' : recruiter === 'MAYA' ? 'MY' : 'JN'}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="text-sm font-medium text-ink">{config.name}</div>
-                  <div className="text-[11px] font-medium" style={{ color: config.color }}>
-                    {config.role}
-                  </div>
+                  <div className="text-[11px] font-medium truncate" style={{ color: config.color }}>{config.role}</div>
                 </div>
                 {isCurrentSpeaker && (
-                  <div className="ml-auto flex items-center gap-1.5">
+                  <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full animate-pulse-dot" style={{ backgroundColor: config.color }} />
-                    <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color: config.color }}>
-                      typing
-                    </span>
+                    <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color: config.color }}>typing</span>
                   </div>
                 )}
               </div>
@@ -479,7 +518,6 @@ export function DebateView({
                 ref={(el) => { columnRefs.current[recruiter] = el; }}
                 className="flex-1 p-4 overflow-y-auto flex flex-col gap-3 debate-scroll"
               >
-                {/* Loading skeleton */}
                 {msgs.length === 0 && !isCurrentSpeaker && isStreaming && (
                   <div className="space-y-3">
                     <div className="skeleton h-16 w-full" />
@@ -502,7 +540,6 @@ export function DebateView({
                   ))}
                 </AnimatePresence>
 
-                {/* Partial / streaming message */}
                 {isCurrentSpeaker && currentPartialText && (
                   <motion.div
                     initial={{ opacity: 0, y: 12 }}
@@ -511,7 +548,10 @@ export function DebateView({
                     style={{ backgroundColor: config.tint }}
                   >
                     {currentPartialText}
-                    <span className="animate-blink ml-0.5 inline-block w-[2px] h-[14px] align-middle" style={{ backgroundColor: config.color }} />
+                    <span
+                      className="animate-blink ml-0.5 inline-block w-[2px] h-[14px] align-middle"
+                      style={{ backgroundColor: config.color }}
+                    />
                   </motion.div>
                 )}
               </div>
@@ -520,7 +560,7 @@ export function DebateView({
         })}
       </div>
 
-      {/* Status Bar */}
+      {/* Status bar */}
       <div className="bg-surface border border-edge rounded-xl px-5 py-3.5 flex items-center gap-3 flex-shrink-0 shadow-sm">
         {isStreaming && (
           <span className="w-2.5 h-2.5 rounded-full bg-maya animate-pulse-dot flex-shrink-0" />
