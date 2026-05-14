@@ -143,31 +143,29 @@ export function DebateView({
       const reader = response.body!.getReader();
       const decoder = new TextDecoder();
 
-      let sseBuffer = '';
+      let buffer = '';
       let fullText = '';
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        sseBuffer += decoder.decode(value, { stream: true });
+        buffer += decoder.decode(value, { stream: true });
+        let newlineIndex;
+        while ((newlineIndex = buffer.indexOf('\n')) >= 0) {
+          const line = buffer.slice(0, newlineIndex).trim();
+          buffer = buffer.slice(newlineIndex + 1);
 
-        const events = sseBuffer.split('\n\n');
-        sseBuffer = events.pop()!;
-
-        for (const event of events) {
-          const lines = event.split('\n');
-          const dataLine = lines.find((l) => l.startsWith('data: '));
-          if (!dataLine) continue;
-
-          try {
-            const data = JSON.parse(dataLine.slice(6));
-            if (data.candidates && data.candidates[0].content.parts[0].text) {
-              fullText += data.candidates[0].content.parts[0].text;
-              processStreamBuffer(fullText);
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              const textChunk = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (textChunk) {
+                fullText += textChunk;
+                processStreamBuffer(fullText);
+              }
+            } catch (e) {
+              // Ignore partial or malformed JSON silently to allow stream to continue
             }
-          } catch {
-            // skip malformed JSON
           }
         }
       }
@@ -185,7 +183,7 @@ export function DebateView({
 
   const processStreamBuffer = useCallback(
     (text: string, isFinal = false) => {
-      const lines = text.split('\n');
+      const lines = text.split(/\r?\n/);
       const parsedMessages: Message[] = [];
       const topics = new Set<CoverageTopic>();
       let currentMsg: { recruiter: RecruiterName; text: string } | null = null;
