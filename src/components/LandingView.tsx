@@ -12,27 +12,24 @@ interface Props {
   onStart: () => void;
 }
 
-const EVALUATION_MODES: { mode: EvaluationMode; icon: string; desc: string }[] = [
-  { mode: 'FAANG',              icon: '⚡', desc: 'Algorithms, scale, system design' },
-  { mode: 'Startup',            icon: '🚀', desc: 'Speed, ownership, product sense' },
-  { mode: 'Research Lab',       icon: '🔬', desc: 'Depth, rigor, novel contributions' },
-  { mode: 'Fintech',            icon: '📊', desc: 'Compliance, reliability, data' },
-  { mode: 'ML Engineering',     icon: '🧠', desc: 'Models, pipelines, benchmarks' },
-  { mode: 'Frontend Engineering',icon: '🎨', desc: 'UX depth, perf, component arch' },
+const EVALUATION_MODES: { mode: EvaluationMode; label: string; desc: string }[] = [
+  { mode: 'FAANG',               label: 'FAANG',               desc: 'Algorithms, scale, systems'   },
+  { mode: 'Startup',             label: 'Startup',             desc: 'Velocity, ownership, product'  },
+  { mode: 'Research Lab',        label: 'Research Lab',        desc: 'Depth, rigor, publications'    },
+  { mode: 'Fintech',             label: 'Fintech',             desc: 'Reliability, compliance, data'  },
+  { mode: 'ML Engineering',      label: 'ML Engineering',      desc: 'Models, pipelines, benchmarks' },
+  { mode: 'Frontend Engineering',label: 'Frontend',            desc: 'UX depth, perf, architecture'  },
 ];
 
 const recruiters = [
-  { initials: 'AX', name: 'Alex', role: 'The Skeptic', colorClass: 'bg-alex' },
-  { initials: 'MY', name: 'Maya', role: 'Your Champion', colorClass: 'bg-maya' },
-  { initials: 'JN', name: 'Jin', role: 'The Verdict', colorClass: 'bg-jin' },
+  { initials: 'AX', name: 'Alex',  role: 'Staff Engineer', color: '#B03A2E' },
+  { initials: 'MY', name: 'Maya',  role: 'Eng Manager',    color: '#1A8A65' },
+  { initials: 'JN', name: 'Jin',   role: 'VP Engineering', color: '#2557A7' },
 ];
 
 function loadPdfJs(): Promise<any> {
   return new Promise((resolve, reject) => {
-    if ((window as any).pdfjsLib) {
-      resolve((window as any).pdfjsLib);
-      return;
-    }
+    if ((window as any).pdfjsLib) { resolve((window as any).pdfjsLib); return; }
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     script.onload = () => {
@@ -41,11 +38,9 @@ function loadPdfJs(): Promise<any> {
         lib.GlobalWorkerOptions.workerSrc =
           'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         resolve(lib);
-      } else {
-        reject(new Error('pdf.js failed to load'));
-      }
+      } else reject(new Error('pdf.js failed to load'));
     };
-    script.onerror = () => reject(new Error('Failed to load pdf.js script'));
+    script.onerror = () => reject(new Error('Failed to load pdf.js'));
     document.head.appendChild(script);
   });
 }
@@ -64,8 +59,7 @@ async function extractTextFromFile(file: File): Promise<string> {
       }
       return text.trim();
     } catch (e) {
-      console.error('PDF parse error:', e);
-      return '[Error extracting PDF text. Please paste your resume text instead.]';
+      return '[Error extracting PDF. Please paste your resume text instead.]';
     }
   }
   return file.text();
@@ -81,21 +75,19 @@ export function LandingView({
   onStart,
 }: Props) {
   const [isDragging, setIsDragging] = useState(false);
-  const [fileName, setFileName] = useState('');
-  const [showPasteArea, setShowPasteArea] = useState(false);
+  const [fileName, setFileName]     = useState('');
+  const [showPaste, setShowPaste]   = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const envKey = typeof import.meta !== 'undefined'
-    ? (import.meta as any).env?.VITE_GEMINI_API_KEY || ''
-    : '';
+  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
+  const canStart = resumeText.trim().length > 0 && targetRole.trim().length > 0 && apiKey.length > 0;
 
   const handleFile = useCallback(async (file: File) => {
     setIsExtracting(true);
     setFileName(file.name);
     try {
-      const text = await extractTextFromFile(file);
-      setResumeText(text);
+      setResumeText(await extractTextFromFile(file));
     } catch {
       setResumeText('[Error reading file. Please paste your resume text instead.]');
     } finally {
@@ -103,94 +95,71 @@ export function LandingView({
     }
   }, [setResumeText]);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  }, [handleFile]);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  }, []);
-
-  const canStart =
-    resumeText.trim().length > 0 &&
-    targetRole.trim().length > 0 &&
-    envKey.trim().length > 0;
+  const handleDrop      = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }, [handleFile]);
+  const handleDragOver  = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true);  }, []);
+  const handleDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); }, []);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
-      <div className="flex flex-col items-center text-center max-w-2xl w-full">
-        {/* Headline */}
+      <div className="w-full max-w-[480px]">
+
+        {/* Wordmark */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-4"
+          transition={{ duration: 0.4 }}
+          className="mb-12"
         >
-          <h1 className="font-headline text-ink">
-            Three recruiters. Your one shot.
+          <p className="font-label mb-4" style={{ color: 'var(--color-muted)' }}>HireFrame</p>
+          <h1 className="font-display" style={{ color: 'var(--color-ink)' }}>
+            Three opinions.<br />One honest verdict.
           </h1>
+          <p className="mt-4 text-[15px] leading-relaxed" style={{ color: 'var(--color-muted)' }}>
+            Drop your resume. A senior engineering panel debates it live.
+          </p>
         </motion.div>
 
-        {/* Subline */}
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-base text-muted mb-12 max-w-md"
-        >
-          Drop your resume. Watch them debate. Find out if you'd get hired.
-        </motion.p>
-
-        {/* Avatar chips */}
+        {/* Recruiter chips */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="flex items-center gap-6 sm:gap-10 mb-14"
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="flex items-center gap-5 mb-12"
         >
           {recruiters.map((r, i) => (
             <motion.div
               key={r.initials}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 + i * 0.1, type: 'spring', stiffness: 300 }}
-              className="flex flex-col items-center gap-2.5"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 + i * 0.07, duration: 0.3 }}
+              className="flex items-center gap-2.5"
             >
               <div
-                className={`w-14 h-14 rounded-full ${r.colorClass} flex items-center justify-center text-white text-sm font-medium tracking-wide`}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-semibold tracking-wide flex-shrink-0"
+                style={{ backgroundColor: r.color }}
               >
                 {r.initials}
               </div>
-              <span className="text-xs text-muted font-medium">
-                {r.name} · <span className="font-normal">{r.role}</span>
-              </span>
+              <div>
+                <p className="text-[13px] font-medium leading-tight" style={{ color: 'var(--color-ink)' }}>{r.name}</p>
+                <p className="text-[11px] leading-tight" style={{ color: 'var(--color-muted)' }}>{r.role}</p>
+              </div>
             </motion.div>
           ))}
         </motion.div>
 
-        {/* Form card */}
+        {/* Form */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="w-full max-w-lg bg-surface border border-edge rounded-xl p-8 space-y-6 text-left shadow-sm"
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="space-y-6"
         >
-          {/* Resume upload zone */}
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted uppercase tracking-wider block">
-              Resume
-            </label>
 
-            {!showPasteArea ? (
+          {/* Resume upload */}
+          <div>
+            <p className="font-label mb-2">Resume</p>
+            {!showPaste ? (
               <>
                 <div
                   onDrop={handleDrop}
@@ -198,18 +167,18 @@ export function LandingView({
                   onDragLeave={handleDragLeave}
                   onClick={() => fileInputRef.current?.click()}
                   className={`
-                    border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer
-                    transition-all duration-200
+                    relative border rounded-lg p-7 flex flex-col items-center justify-center cursor-pointer
+                    transition-all duration-200 text-center
                     ${isDragging
-                      ? 'border-jin bg-jin-tint'
+                      ? 'border-ink bg-edge/30'
                       : fileName
-                        ? 'border-maya bg-maya-tint'
-                        : 'border-edge hover:border-muted bg-canvas'
+                        ? 'border-edge bg-surface'
+                        : 'border-dashed border-edge-strong bg-surface hover:border-ink hover:bg-canvas'
                     }
                   `}
                 >
                   {isExtracting ? (
-                    <div className="flex items-center gap-2 text-sm text-muted">
+                    <div className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--color-muted)' }}>
                       <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -217,22 +186,22 @@ export function LandingView({
                       Extracting text…
                     </div>
                   ) : fileName ? (
-                    <div className="flex items-center gap-2 text-sm text-maya font-medium">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="flex items-center gap-2 text-[13px] font-medium" style={{ color: 'var(--color-maya)' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M20 6L9 17l-5-5" />
                       </svg>
                       {fileName}
                     </div>
                   ) : (
                     <>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted mb-2">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-2.5" style={{ color: 'var(--color-faint)' }}>
                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
                         <polyline points="17 8 12 3 7 8" />
                         <line x1="12" y1="3" x2="12" y2="15" />
                       </svg>
-                      <span className="text-sm text-muted">
-                        Drop PDF or text file, or click to browse
-                      </span>
+                      <p className="text-[13px]" style={{ color: 'var(--color-muted)' }}>
+                        Drop PDF or click to browse
+                      </p>
                     </>
                   )}
                   <input
@@ -240,19 +209,17 @@ export function LandingView({
                     type="file"
                     accept=".pdf,.txt,.doc,.docx,.md"
                     className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFile(file);
-                    }}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
                   />
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => setShowPasteArea(true)}
-                  className="text-xs text-jin hover:text-ink transition-colors cursor-pointer underline underline-offset-2"
+                  onClick={() => setShowPaste(true)}
+                  className="mt-2 text-[12px] transition-colors cursor-pointer"
+                  style={{ color: 'var(--color-muted)' }}
                 >
-                  Or paste resume text
+                  or paste text instead
                 </button>
               </>
             ) : (
@@ -260,17 +227,22 @@ export function LandingView({
                 <textarea
                   value={resumeText}
                   onChange={(e) => setResumeText(e.target.value)}
-                  placeholder="Paste your resume text here..."
-                  rows={6}
-                  className="w-full bg-canvas border border-edge rounded-lg p-4 text-sm text-ink placeholder:text-muted/50 focus:outline-none focus:border-jin focus:ring-1 focus:ring-jin/20 resize-none transition-all"
+                  placeholder="Paste your resume here…"
+                  rows={7}
+                  className="w-full rounded-lg p-4 text-[13px] leading-relaxed resize-none transition-all outline-none border"
+                  style={{
+                    background: 'var(--color-surface)',
+                    borderColor: 'var(--color-edge)',
+                    color: 'var(--color-ink)',
+                  }}
+                  onFocus={(e) => { e.target.style.borderColor = 'var(--color-ink)'; }}
+                  onBlur={(e)  => { e.target.style.borderColor = 'var(--color-edge)'; }}
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowPasteArea(false);
-                    setResumeText('');
-                  }}
-                  className="text-xs text-jin hover:text-ink transition-colors cursor-pointer underline underline-offset-2"
+                  onClick={() => { setShowPaste(false); setResumeText(''); }}
+                  className="mt-2 text-[12px] transition-colors cursor-pointer"
+                  style={{ color: 'var(--color-muted)' }}
                 >
                   Upload a file instead
                 </button>
@@ -278,62 +250,63 @@ export function LandingView({
             )}
           </div>
 
-          {/* Target role input */}
-          <div className="space-y-2">
-            <label htmlFor="target-role" className="text-xs font-medium text-muted uppercase tracking-wider block">
-              Target Role
-            </label>
+          {/* Target role */}
+          <div>
+            <p className="font-label mb-2">Target Role</p>
             <input
-              id="target-role"
               type="text"
               value={targetRole}
               onChange={(e) => setTargetRole(e.target.value)}
-              placeholder="e.g. Frontend Engineer at a startup"
-              className="w-full bg-transparent border-0 border-b border-edge focus:border-ink focus:ring-0 text-base text-ink placeholder:text-muted/40 py-2.5 px-0 transition-colors outline-none"
+              placeholder="e.g. Frontend Engineer at a Series B startup"
+              className="w-full py-2.5 px-0 text-[15px] bg-transparent border-0 border-b outline-none transition-colors"
+              style={{
+                borderColor: 'var(--color-edge)',
+                color: 'var(--color-ink)',
+              }}
+              onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = 'var(--color-ink)'; }}
+              onBlur={(e)  => { (e.target as HTMLInputElement).style.borderColor = 'var(--color-edge)'; }}
             />
           </div>
 
-
-          {/* Evaluation mode picker */}
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted uppercase tracking-wider block">
-              Evaluation Mode
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {EVALUATION_MODES.map(({ mode, icon, desc }) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setEvaluationMode(mode)}
-                  className={`text-left px-3 py-2.5 rounded-lg border text-xs transition-all duration-150 cursor-pointer ${
-                    evaluationMode === mode
-                      ? 'border-ink bg-ink text-white'
-                      : 'border-edge bg-canvas text-muted hover:border-muted hover:text-ink'
-                  }`}
-                >
-                  <span className="block mb-0.5">{icon} <span className="font-medium">{mode}</span></span>
-                  <span className="opacity-70 leading-tight block">{desc}</span>
-                </button>
-              ))}
+          {/* Evaluation mode */}
+          <div>
+            <p className="font-label mb-2">Evaluation Mode</p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {EVALUATION_MODES.map(({ mode, label, desc }) => {
+                const active = evaluationMode === mode;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setEvaluationMode(mode)}
+                    className="text-left p-3 rounded-lg border text-[12px] transition-all duration-150 cursor-pointer"
+                    style={{
+                      borderColor: active ? 'var(--color-ink)' : 'var(--color-edge)',
+                      background:  active ? 'var(--color-ink)' : 'var(--color-surface)',
+                      color:       active ? '#fff'             : 'var(--color-muted)',
+                    }}
+                  >
+                    <span className="block font-medium mb-0.5" style={{ color: active ? '#fff' : 'var(--color-ink-2)' }}>{label}</span>
+                    <span className="block text-[11px] leading-snug opacity-70">{desc}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Start button */}
+          {/* CTA */}
           <button
             onClick={onStart}
             disabled={!canStart}
-            className={`
-              w-full py-3.5 px-6 rounded-lg text-sm font-medium tracking-wide
-              flex items-center justify-center gap-2
-              transition-all duration-200
-              ${canStart
-                ? 'bg-dark text-white hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] cursor-pointer'
-                : 'bg-edge text-muted cursor-not-allowed'
-              }
-            `}
+            className="w-full py-3 px-5 rounded-lg text-[14px] font-medium tracking-wide transition-all duration-200 flex items-center justify-center gap-2"
+            style={{
+              background: canStart ? 'var(--color-ink)' : 'var(--color-edge)',
+              color:      canStart ? '#fff'             : 'var(--color-muted)',
+              cursor:     canStart ? 'pointer'          : 'not-allowed',
+            }}
           >
-            Start the debate
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            Begin evaluation
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="5" y1="12" x2="19" y2="12" />
               <polyline points="12 5 19 12 12 19" />
             </svg>

@@ -14,9 +14,9 @@ interface Props {
 }
 
 const RECRUITER_CONFIG: Record<RecruiterName, { name: string; role: string; color: string; tint: string }> = {
-  ALEX: { name: 'Alex', role: 'Staff Engineer', color: '#C0392B', tint: 'rgba(192,57,43,0.07)' },
-  MAYA: { name: 'Maya', role: 'Eng Manager',   color: '#1D9E75', tint: 'rgba(29,158,117,0.07)' },
-  JIN:  { name: 'Jin',  role: 'VP Engineering', color: '#2C6FBF', tint: 'rgba(44,111,191,0.07)'  },
+  ALEX: { name: 'Alex', role: 'Staff Engineer', color: '#B03A2E', tint: 'rgba(176,58,46,0.06)'  },
+  MAYA: { name: 'Maya', role: 'Eng Manager',    color: '#1A8A65', tint: 'rgba(26,138,101,0.06)' },
+  JIN:  { name: 'Jin',  role: 'VP Engineering', color: '#2557A7', tint: 'rgba(37,87,167,0.06)'  },
 };
 
 const COVERAGE_TOPICS: CoverageTopic[] = ['Technical', 'Communication', 'Depth', 'Wildcard'];
@@ -391,39 +391,40 @@ export function DebateView({
     <div className="min-h-screen flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full gap-4">
 
       {/* Header bar */}
-      <div className="bg-surface border border-edge rounded-xl p-5 shadow-sm flex-shrink-0">
-        <div className="flex justify-between items-center mb-4">
+      <div className="card p-5 flex-shrink-0">
+        <div className="flex justify-between items-center mb-5">
           <div>
-            <h2 className="text-lg font-medium text-ink">Live Evaluation</h2>
-            <p className="text-sm text-muted mt-0.5">{targetRole} · <span className="font-medium text-ink">{evaluationMode}</span></p>
+            <p className="font-label mb-0.5">Live Evaluation</p>
+            <p className="text-[15px] font-medium" style={{ color: 'var(--color-ink)' }}>
+              {targetRole}
+              <span className="ml-2 text-[13px] font-normal" style={{ color: 'var(--color-muted)' }}>· {evaluationMode}</span>
+            </p>
           </div>
           <div className="flex items-center gap-2">
-            {isStreaming && <span className="w-2 h-2 rounded-full bg-maya animate-pulse-dot" />}
-            <span className="text-xs font-medium text-muted uppercase tracking-wider">
-              {isStreaming ? 'Session Active' : 'Complete'}
-            </span>
+            {isStreaming && <span className="w-1.5 h-1.5 rounded-full animate-pulse-dot" style={{ backgroundColor: 'var(--color-maya)' }} />}
+            <span className="font-label">{isStreaming ? 'Active' : 'Complete'}</span>
           </div>
         </div>
 
         {/* Coverage bar */}
-        <div className="flex gap-1.5 h-2 w-full">
-          {COVERAGE_TOPICS.map((topic, i) => (
+        <div className="flex gap-1 h-[3px] w-full rounded-full overflow-hidden mb-3">
+          {COVERAGE_TOPICS.map((topic) => (
             <div
               key={topic}
-              className={`flex-1 coverage-segment ${i === 0 ? 'rounded-l' : ''} ${i === 3 ? 'rounded-r' : ''}`}
+              className="flex-1 coverage-segment"
               style={{
-                backgroundColor: coverageTopics.has(topic) ? COVERAGE_COLORS[topic] : '#E5E4E0',
-                opacity: coverageTopics.has(topic) ? 1 : 0.4,
+                backgroundColor: coverageTopics.has(topic) ? COVERAGE_COLORS[topic] : 'var(--color-edge)',
+                opacity: coverageTopics.has(topic) ? 1 : 1,
               }}
             />
           ))}
         </div>
-        <div className="flex justify-between mt-2">
+        <div className="flex justify-between">
           {COVERAGE_TOPICS.map((topic) => (
             <span
               key={topic}
-              className="text-[10px] uppercase tracking-wider font-medium transition-colors duration-300"
-              style={{ color: coverageTopics.has(topic) ? COVERAGE_COLORS[topic] : '#6B6B66' }}
+              className="font-label transition-colors duration-300"
+              style={{ color: coverageTopics.has(topic) ? COVERAGE_COLORS[topic] : 'var(--color-faint)' }}
             >
               {topic}
             </span>
@@ -431,7 +432,7 @@ export function DebateView({
         </div>
 
         {/* Recruiter confidence bars */}
-        <div className="mt-5 grid grid-cols-3 gap-4">
+        <div className="mt-5 grid grid-cols-3 gap-4 pt-4 border-t border-edge">
           {(Object.keys(RECRUITER_CONFIG) as RecruiterName[]).map((r) => {
             const cfg = RECRUITER_CONFIG[r];
             const pct = confidence[r];
@@ -439,18 +440,19 @@ export function DebateView({
             return (
               <div key={r}>
                 <div className="flex justify-between items-baseline mb-1.5">
-                  <span className="text-xs font-medium text-ink">{cfg.name}</span>
-                  <span className="text-[10px] font-medium" style={{ color: cfg.color }}>{pct}% · {label}</span>
+                  <span className="text-[12px] font-medium" style={{ color: 'var(--color-ink)' }}>{cfg.name}</span>
+                  <span className="text-[11px]" style={{ color: cfg.color }}>{pct}%</span>
                 </div>
-                <div className="h-1.5 w-full bg-edge rounded-full overflow-hidden">
+                <div className="h-[3px] w-full rounded-full overflow-hidden" style={{ background: 'var(--color-edge)' }}>
                   <motion.div
                     className="h-full rounded-full"
                     style={{ backgroundColor: cfg.color }}
                     initial={{ width: '50%' }}
                     animate={{ width: `${pct}%` }}
-                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                    transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
                   />
                 </div>
+                <p className="text-[10px] mt-1" style={{ color: 'var(--color-faint)' }}>{label}</p>
               </div>
             );
           })}
@@ -460,22 +462,24 @@ export function DebateView({
       {/* Error state */}
       {error && (
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-surface border border-alex/20 rounded-xl p-6 flex flex-col sm:flex-row items-center gap-4"
+          className="card p-5 flex flex-col sm:flex-row items-center gap-4"
+          style={{ borderColor: 'rgba(176,58,46,0.3)' }}
         >
-          <div className="w-10 h-10 rounded-full bg-alex/10 flex items-center justify-center flex-shrink-0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C0392B" strokeWidth="2">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(176,58,46,0.08)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B03A2E" strokeWidth="2">
               <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
           </div>
           <div className="flex-1 text-center sm:text-left">
-            <p className="text-sm font-medium text-ink mb-1">Something went wrong</p>
-            <p className="text-xs text-muted">{error}</p>
+            <p className="text-[13px] font-medium" style={{ color: 'var(--color-ink)' }}>Something went wrong</p>
+            <p className="text-[12px] mt-0.5" style={{ color: 'var(--color-muted)' }}>{error}</p>
           </div>
           <button
             onClick={() => { setError(null); setHasStarted(false); isStreamingRef.current = false; setTimeout(() => startDebate(), 100); }}
-            className="bg-dark text-white text-sm px-5 py-2.5 rounded-lg hover:scale-[1.02] active:scale-[0.98] transition-transform cursor-pointer"
+            className="text-[13px] font-medium px-4 py-2 rounded-lg transition-all cursor-pointer"
+            style={{ background: 'var(--color-ink)', color: '#fff' }}
           >
             Retry
           </button>
@@ -483,27 +487,29 @@ export function DebateView({
       )}
 
       {/* Three-column debate */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 min-h-0">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3 min-h-0">
         {columnData.map(({ recruiter, msgs }) => {
           const config = RECRUITER_CONFIG[recruiter];
           const isCurrentSpeaker = currentSpeaker === recruiter && isStreaming;
           return (
             <div
               key={recruiter}
-              className="flex flex-col bg-surface border border-edge rounded-xl overflow-hidden min-h-[300px] md:min-h-0"
-              style={{ boxShadow: isCurrentSpeaker ? `0 0 0 1.5px ${config.color}30` : undefined }}
+              className="flex flex-col bg-surface border rounded-xl overflow-hidden min-h-[300px] md:min-h-0 transition-all duration-300"
+              style={{
+                borderColor: isCurrentSpeaker ? config.color + '50' : 'var(--color-edge)',
+              }}
             >
               {/* Column header */}
-              <div className="border-b border-edge px-4 py-3 flex items-center gap-3 flex-shrink-0">
+              <div className="border-b px-4 py-3 flex items-center gap-2.5 flex-shrink-0" style={{ borderColor: 'var(--color-edge)' }}>
                 <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
                   style={{ backgroundColor: config.color }}
                 >
                   {recruiter === 'ALEX' ? 'AX' : recruiter === 'MAYA' ? 'MY' : 'JN'}
                 </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-medium text-ink">{config.name}</div>
-                  <div className="text-[11px] font-medium truncate" style={{ color: config.color }}>{config.role}</div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-semibold leading-tight" style={{ color: 'var(--color-ink)' }}>{config.name}</p>
+                  <p className="text-[11px] leading-tight" style={{ color: config.color }}>{config.role}</p>
                 </div>
                 {isCurrentSpeaker && (
                   <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
@@ -529,11 +535,11 @@ export function DebateView({
                   {msgs.map((msg, i) => (
                     <motion.div
                       key={`${recruiter}-${i}`}
-                      initial={{ opacity: 0, y: 12 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, ease: 'easeOut' }}
-                      className="rounded-lg p-3.5 text-sm leading-relaxed text-ink"
-                      style={{ backgroundColor: config.tint }}
+                      transition={{ duration: 0.28, ease: 'easeOut' }}
+                      className="rounded-lg p-3.5 text-[13px] leading-relaxed"
+                      style={{ background: config.tint, color: 'var(--color-ink)' }}
                     >
                       {msg.text}
                     </motion.div>
@@ -542,14 +548,14 @@ export function DebateView({
 
                 {isCurrentSpeaker && currentPartialText && (
                   <motion.div
-                    initial={{ opacity: 0, y: 12 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-lg p-3.5 text-sm leading-relaxed text-ink"
-                    style={{ backgroundColor: config.tint }}
+                    className="rounded-lg p-3.5 text-[13px] leading-relaxed"
+                    style={{ background: config.tint, color: 'var(--color-ink)' }}
                   >
                     {currentPartialText}
                     <span
-                      className="animate-blink ml-0.5 inline-block w-[2px] h-[14px] align-middle"
+                      className="animate-blink ml-0.5 inline-block w-[1.5px] h-[13px] align-middle"
                       style={{ backgroundColor: config.color }}
                     />
                   </motion.div>
@@ -561,11 +567,11 @@ export function DebateView({
       </div>
 
       {/* Status bar */}
-      <div className="bg-surface border border-edge rounded-xl px-5 py-3.5 flex items-center gap-3 flex-shrink-0 shadow-sm">
+      <div className="card px-5 py-3 flex items-center gap-3 flex-shrink-0">
         {isStreaming && (
-          <span className="w-2.5 h-2.5 rounded-full bg-maya animate-pulse-dot flex-shrink-0" />
+          <span className="w-1.5 h-1.5 rounded-full animate-pulse-dot flex-shrink-0" style={{ background: 'var(--color-maya)' }} />
         )}
-        <span className="text-sm text-muted truncate">{statusText}</span>
+        <span className="text-[13px] truncate" style={{ color: 'var(--color-muted)' }}>{statusText}</span>
       </div>
     </div>
   );

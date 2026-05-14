@@ -40,44 +40,47 @@ export default function App() {
     <div className="min-h-screen bg-canvas font-sans text-ink flex">
       <AnimatePresence>
         {screen !== 'landing' && (
-          <motion.aside 
-            initial={{ opacity: 0, x: -20 }}
+          <motion.aside
+            initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="w-64 border-r border-edge bg-surface flex flex-col p-6 sticky top-0 h-screen shrink-0 z-10"
+            exit={{ opacity: 0, x: -16 }}
+            transition={{ duration: 0.25 }}
+            className="w-56 border-r border-edge bg-surface flex flex-col py-8 px-5 sticky top-0 h-screen shrink-0 z-10"
           >
-            <div className="flex items-center gap-2 font-semibold text-lg mb-8 tracking-tight text-dark">
-              <div className="w-6 h-6 rounded-md bg-dark" />
-              SignalForge
+            {/* Wordmark */}
+            <div className="mb-10">
+              <span className="text-[13px] font-semibold tracking-tight text-ink">HireFrame</span>
             </div>
-            
-            <nav className="flex flex-col gap-2 flex-1">
-              <button 
+
+            {/* Nav */}
+            <nav className="flex flex-col gap-0.5 flex-1">
+              <button
                 onClick={() => setScreen('debate')}
-                className={`text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${screen === 'debate' ? 'bg-dark text-white shadow-sm' : 'text-muted hover:bg-edge/50'}`}
+                className={`nav-item ${screen === 'debate' ? 'active' : ''}`}
               >
-                Live Evaluation
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${screen === 'debate' ? 'bg-ink' : 'bg-edge-strong'}`} />
+                Evaluation
               </button>
-              
-              <div className="relative">
-                <button 
-                  onClick={() => { if (scoreData) setScreen('reveal') }}
-                  disabled={!scoreData}
-                  className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${screen === 'reveal' ? 'bg-dark text-white shadow-sm' : !scoreData ? 'opacity-50 cursor-not-allowed text-muted/50' : 'text-muted hover:bg-edge/50'}`}
-                >
-                  Diagnostics Report
-                </button>
+
+              <button
+                onClick={() => { if (scoreData) setScreen('reveal'); }}
+                disabled={!scoreData}
+                className={`nav-item ${screen === 'reveal' ? 'active' : ''} ${!scoreData ? 'disabled' : ''}`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${screen === 'reveal' ? 'bg-ink' : !scoreData ? 'bg-edge' : 'bg-edge-strong'}`} />
+                Diagnostics
                 {!scoreData && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-edge animate-pulse" />
+                  <span className="ml-auto text-[10px] text-faint font-normal">pending</span>
                 )}
-              </div>
+              </button>
             </nav>
 
-            <button 
+            {/* End session */}
+            <button
               onClick={handleRestart}
-              className="text-left px-4 py-2.5 text-sm text-alex hover:bg-alex/10 rounded-lg transition-colors font-medium mt-auto"
+              className="nav-item text-muted hover:text-alex mt-4"
             >
-              End Session
+              End session
             </button>
           </motion.aside>
         )}

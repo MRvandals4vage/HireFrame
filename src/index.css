@@ -3,112 +3,165 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  --color-canvas: #F7F7F5;
-  --color-surface: #FFFFFF;
-  --color-edge: #E5E4E0;
-  --color-ink: #1A1A18;
-  --color-muted: #6B6B66;
-  --color-alex: #C0392B;
-  --color-maya: #1D9E75;
-  --color-jin: #2C6FBF;
-  --color-alex-tint: rgba(192, 57, 43, 0.08);
-  --color-maya-tint: rgba(29, 158, 117, 0.08);
-  --color-jin-tint: rgba(44, 111, 191, 0.08);
-  --color-dark: #1A1A18;
-  --color-highlight: #FFFBEB;
-  --color-amber: #D97706;
-  --color-score-red: #C0392B;
-  --color-score-amber: #D97706;
-  --color-score-green: #1D9E75;
+  /* ── Core palette ────────────────────────────────────────────── */
+  --color-canvas:  #F5F4F0;   /* warm off-white page background    */
+  --color-surface: #FAFAF8;   /* cards / panels                    */
+  --color-raised:  #FFFFFF;   /* elements that sit above surface   */
+  --color-edge:    #E2E1DC;   /* borders, dividers                 */
+  --color-edge-strong: #C8C7C1; /* stronger border when needed     */
+  --color-ink:     #111110;   /* primary text                      */
+  --color-ink-2:   #3A3A37;   /* secondary text                    */
+  --color-muted:   #7A7A74;   /* tertiary / labels                 */
+  --color-faint:   #A8A8A2;   /* placeholders                      */
+  --color-dark:    #111110;
+
+  /* ── Recruiter accent colours (restrained) ───────────────────── */
+  --color-alex:    #B03A2E;   /* muted terracotta-red              */
+  --color-maya:    #1A8A65;   /* muted forest-green                */
+  --color-jin:     #2557A7;   /* muted cobalt-blue                 */
+
+  /* ── Utility ─────────────────────────────────────────────────── */
+  --color-amber:   #B45309;
+  --color-highlight: #FEFCE8;
 }
 
+/* ── Base ───────────────────────────────────────────────────────── */
 @layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
   body {
     @apply bg-canvas text-ink antialiased;
     font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: rgba(37, 87, 167, 0.15);
   }
 }
 
-/* Typography classes */
+/* ── Typography scale ───────────────────────────────────────────── */
+.font-display {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  color: var(--color-ink);
+}
+
 .font-headline {
-  font-size: 40px;
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+}
+
+.font-label {
+  font-size: 11px;
   font-weight: 500;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
 }
 
 .font-score {
-  font-size: 80px;
+  font-size: clamp(60px, 8vw, 88px);
   font-weight: 300;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .font-score-unit {
-  font-size: 24px;
-  font-weight: 400;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  color: var(--color-muted);
 }
 
-/* Animations */
-@keyframes fadeSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* ── Animations ─────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
 }
 
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+@keyframes pulseDot {
+  0%, 100% { opacity: 1;   }
+  50%       { opacity: 0.3; }
 }
 
 @keyframes blink {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  50%       { opacity: 0; }
 }
 
-.animate-fade-slide-up {
-  animation: fadeSlideUp 300ms ease-out forwards;
-}
-
-.animate-pulse-dot {
-  animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-blink {
-  animation: blink 1s step-end infinite;
-}
-
-/* Coverage bar transition */
-.coverage-segment {
-  transition: background-color 600ms ease, opacity 600ms ease;
-}
-
-/* Skeleton loading */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
 }
 
+.animate-fade-up    { animation: fadeUp 280ms ease-out forwards; }
+.animate-pulse-dot  { animation: pulseDot 2s ease-in-out infinite; }
+.animate-blink      { animation: blink 1.1s step-end infinite; }
+
+/* ── Surface / card system ──────────────────────────────────────── */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-edge);
+  border-radius: 12px;
+}
+
+.card-raised {
+  background: var(--color-raised);
+  border: 1px solid var(--color-edge);
+  border-radius: 12px;
+}
+
+/* ── Coverage bar ───────────────────────────────────────────────── */
+.coverage-segment {
+  transition: background-color 700ms cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 700ms ease;
+}
+
+/* ── Skeleton ───────────────────────────────────────────────────── */
 .skeleton {
-  background: linear-gradient(90deg, #f0f0ed 25%, #e8e8e4 50%, #f0f0ed 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-edge) 25%,
+    #DDDCD7 50%,
+    var(--color-edge) 75%
+  );
   background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 8px;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 6px;
 }
 
-/* Scrollbar styling */
-.debate-scroll::-webkit-scrollbar {
-  width: 4px;
-}
-.debate-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
+/* ── Scrollbar ──────────────────────────────────────────────────── */
+.debate-scroll::-webkit-scrollbar       { width: 3px; }
+.debate-scroll::-webkit-scrollbar-track { background: transparent; }
 .debate-scroll::-webkit-scrollbar-thumb {
-  background: #E5E4E0;
-  border-radius: 4px;
+  background: var(--color-edge-strong);
+  border-radius: 3px;
 }
+
+/* ── Sidebar nav ────────────────────────────────────────────────── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-muted);
+  transition: color 150ms ease, background 150ms ease;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-item:hover { color: var(--color-ink); background: var(--color-edge); }
+.nav-item.active { color: var(--color-ink); background: var(--color-edge); }
+.nav-item.disabled { opacity: 0.4; cursor: not-allowed; }
