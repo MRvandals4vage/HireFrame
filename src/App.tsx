@@ -55,11 +55,11 @@ export default function App() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -16 }}
             transition={{ duration: 0.25 }}
-            className="w-56 border-r border-edge bg-surface flex flex-col py-8 px-5 sticky top-0 h-screen shrink-0 z-10"
+            className="w-56 border-r border-edge bg-canvas flex flex-col py-8 px-5 sticky top-0 h-screen shrink-0 z-10"
           >
             {/* Wordmark */}
-            <div className="mb-10">
-              <span className="text-[14px] font-bold tracking-tight text-ink">Hire Frame</span>
+            <div className="mb-12">
+              <span className="text-[15px] font-bold tracking-tight text-ink">Hire Frame</span>
             </div>
 
             {/* Nav */}
@@ -117,7 +117,7 @@ export default function App() {
             {/* End session */}
             <button
               onClick={handleRestart}
-              className="nav-item text-muted hover:text-alex mt-4"
+              className="nav-item text-muted hover:text-alex mt-6 pt-4 border-t border-edge"
             >
               End session
             </button>

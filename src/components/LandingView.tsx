@@ -111,13 +111,13 @@ export function LandingView({
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-10 text-center"
+          className="mb-12 text-center"
         >
-          <h1 className="text-[40px] font-bold tracking-tight" style={{ color: 'var(--color-ink)' }}>
+          <h1 className="text-[48px] font-bold tracking-tight" style={{ color: 'var(--color-ink)' }}>
             Hire Frame
           </h1>
-          <p className="mt-2 text-[15px]" style={{ color: 'var(--color-muted)' }}>
-            AI-powered interview readiness assessment.
+          <p className="mt-3 text-[16px] leading-relaxed" style={{ color: 'var(--color-muted)' }}>
+            AI interview panel debate. Get clarity on your readiness.
           </p>
         </motion.div>
 
@@ -134,9 +134,9 @@ export function LandingView({
               onDragLeave={handleDragLeave}
               onClick={() => !isExtracting && fileInputRef.current?.click()}
               className={`
-                relative rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer
+                relative rounded-xl p-12 flex flex-col items-center justify-center cursor-pointer
                 transition-all duration-300 text-center border border-edge
-                ${isDragging ? 'bg-edge scale-[1.02]' : 'bg-surface hover:bg-raised hover:scale-[1.02] hover:shadow-sm'}
+                ${isDragging ? 'bg-edge-strong/5 scale-[1.02]' : 'bg-surface hover:bg-raised hover:scale-[1.01] hover:shadow-md'}
               `}
             >
               {isExtracting ? (
@@ -149,15 +149,15 @@ export function LandingView({
                 </div>
               ) : (
                 <>
-                  <div className="w-12 h-12 rounded-full bg-raised shadow-sm flex items-center justify-center mb-4">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-ink)' }}>
+                  <div className="w-14 h-14 rounded-full bg-ink/5 flex items-center justify-center mb-5 border border-edge">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-ink)' }}>
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
                       <polyline points="17 8 12 3 7 8" />
                       <line x1="12" y1="3" x2="12" y2="15" />
                     </svg>
                   </div>
-                  <p className="text-[16px] font-bold text-ink mb-1">Upload Resume</p>
-                  <p className="text-[13px] text-muted">Drop PDF, DOCX, or click to browse</p>
+                  <p className="text-[17px] font-bold text-ink mb-2">Upload Your Resume</p>
+                  <p className="text-[14px] text-muted leading-relaxed">PDF, DOCX, or paste text directly</p>
                 </>
               )}
               <input
@@ -225,34 +225,34 @@ export function LandingView({
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="w-full max-w-[500px] p-8 rounded-2xl bg-surface border border-edge shadow-lg"
             >
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-[22px] font-bold text-ink">Evaluation Settings</h2>
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-[24px] font-bold text-ink">Evaluation Settings</h2>
                 <button 
                   onClick={() => setShowConfigModal(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-edge transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-edge/60 transition-colors"
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                   </svg>
                 </button>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-7">
                 <div>
-                  <p className="font-label mb-2">Target Role</p>
+                  <p className="font-label mb-3">Target Role</p>
                   <input
                     type="text"
                     value={targetRole}
                     onChange={(e) => setTargetRole(e.target.value)}
                     placeholder="e.g. Frontend Engineer at a Series B startup"
-                    className="clay-input w-full p-4 text-[14px]"
+                    className="clay-input w-full p-4 text-[15px]"
                     autoFocus
                   />
                 </div>
 
                 <div>
-                  <p className="font-label mb-3">Evaluation Mode</p>
+                  <p className="font-label mb-4">Evaluation Mode</p>
                   <div className="grid grid-cols-2 gap-3">
                     {EVALUATION_MODES.map(({ mode, label, desc }) => {
                       const active = evaluationMode === mode;
@@ -271,20 +271,20 @@ export function LandingView({
                   </div>
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-4">
                   <button
                     onClick={() => { setShowConfigModal(false); onStart(); }}
                     disabled={!canStart}
-                    className={`w-full py-4 text-[15px] flex items-center justify-center gap-2 ${canStart ? 'clay-btn-primary' : 'clay-btn opacity-50 cursor-not-allowed'}`}
+                    className={`w-full py-4 text-[16px] font-semibold flex items-center justify-center gap-2 ${canStart ? 'clay-btn-primary' : 'clay-btn opacity-50 cursor-not-allowed'}`}
                   >
                     Start Evaluation
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="5" y1="12" x2="19" y2="12" />
                       <polyline points="12 5 19 12 12 19" />
                     </svg>
                   </button>
                   {(!apiKey) && (
-                    <p className="text-center text-[11px] text-alex mt-3 font-medium">Missing API key in .env</p>
+                    <p className="text-center text-[12px] text-alex mt-4 font-medium">Missing API key in .env</p>
                   )}
                 </div>
               </div>

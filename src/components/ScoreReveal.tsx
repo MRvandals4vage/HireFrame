@@ -77,46 +77,46 @@ ${messages.map((m) => `  [${m.recruiter}] ${m.text}`).join('\n')}
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 sm:px-6 py-12 sm:py-16">
-      <div className="w-full max-w-[680px]">
+    <div className="min-h-screen flex flex-col items-center px-4 sm:px-6 py-12 sm:py-16 bg-canvas">
+      <div className="w-full max-w-[720px]">
 
         {/* Score Card */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="card p-8 sm:p-10 mb-5 text-center"
+          className="card p-10 sm:p-12 mb-8 text-center"
         >
-          <p className="font-label mb-6">Readiness Score</p>
-          <div className="flex items-baseline justify-center gap-1 mb-3">
+          <p className="font-label mb-8">Readiness Score</p>
+          <div className="flex items-baseline justify-center gap-2 mb-6">
             <span className="font-score" style={{ color: scoreColor }}>
               <AnimatedScore target={scoreData.readiness_score} />
             </span>
             <span className="font-score-unit">/100</span>
           </div>
 
-          <div className="w-16 h-px mx-auto mb-5" style={{ backgroundColor: 'var(--color-edge)' }} />
+          <div className="w-20 h-px mx-auto mb-8" style={{ backgroundColor: 'var(--color-edge)' }} />
 
-          <p className="text-[15px] leading-relaxed italic" style={{ color: 'var(--color-muted)' }}>
+          <p className="text-[16px] leading-relaxed italic" style={{ color: 'var(--color-muted)' }}>
             &ldquo;{scoreData.verdict}&rdquo;
           </p>
         </motion.div>
 
         {/* Three Columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {/* Hire Blockers */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.35 }}
-            className="card p-5"
-            style={{ borderLeft: '2px solid #B03A2E' }}
+            className="card p-6"
+            style={{ borderLeft: '3px solid #D94A38' }}
           >
-            <p className="font-label mb-4" style={{ color: '#B03A2E' }}>Blockers</p>
+            <p className="font-label mb-5" style={{ color: '#D94A38' }}>Blockers</p>
             <ul className="space-y-3">
               {scoreData.hire_blockers.map((b, i) => (
-                <li key={i} className="flex items-start gap-2 text-[13px] leading-relaxed" style={{ color: 'var(--color-ink-2)' }}>
-                  <span className="flex-shrink-0 mt-1 w-1 h-1 rounded-full" style={{ background: '#B03A2E', marginTop: '6px' }} />
+                <li key={i} className="flex items-start gap-3 text-[14px] leading-relaxed" style={{ color: 'var(--color-ink)' }}>
+                  <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full mt-1.5" style={{ background: '#D94A38' }} />
                   {b}
                 </li>
               ))}
@@ -128,22 +128,22 @@ ${messages.map((m) => `  [${m.recruiter}] ${m.text}`).join('\n')}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.22, duration: 0.35 }}
-            className="card p-5"
-            style={{ borderLeft: '2px solid #1A8A65' }}
+            className="card p-6"
+            style={{ borderLeft: '3px solid #1D9E75' }}
           >
-            <p className="font-label mb-4" style={{ color: '#1A8A65' }}>Quick wins</p>
+            <p className="font-label mb-5" style={{ color: '#1D9E75' }}>Quick wins</p>
             <ul className="space-y-3">
               {scoreData.hire_accelerators.map((a, i) => {
                 const effortMatch = a.match(/\(([^)]+)\)$/);
                 const label = effortMatch ? a.slice(0, a.lastIndexOf('(')).trim() : a;
                 const effort = effortMatch ? effortMatch[1] : null;
                 return (
-                  <li key={i} className="flex items-start gap-2 text-[13px] leading-relaxed" style={{ color: 'var(--color-ink-2)' }}>
-                    <span className="flex-shrink-0 w-1 h-1 rounded-full" style={{ background: '#1A8A65', marginTop: '6px' }} />
+                  <li key={i} className="flex items-start gap-3 text-[14px] leading-relaxed" style={{ color: 'var(--color-ink)' }}>
+                    <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full mt-1.5" style={{ background: '#1D9E75' }} />
                     <span>
                       {label}
                       {effort && (
-                        <span className="inline-block ml-1.5 text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#1A8A65', background: 'rgba(26,138,101,0.1)' }}>
+                        <span className="inline-block ml-2 text-[11px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md" style={{ color: '#1D9E75', background: 'rgba(29,158,117,0.12)' }}>
                           {effort}
                         </span>
                       )}
@@ -159,25 +159,25 @@ ${messages.map((m) => `  [${m.recruiter}] ${m.text}`).join('\n')}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.35 }}
-            className="card p-5"
-            style={{ borderLeft: '2px solid #2557A7' }}
+            className="card p-6"
+            style={{ borderLeft: '3px solid #2C6FBF' }}
           >
-            <p className="font-label mb-4" style={{ color: '#2557A7' }}>30-day plan</p>
+            <p className="font-label mb-5" style={{ color: '#2C6FBF' }}>30-day plan</p>
             <ul className="space-y-4">
               {scoreData.thirty_day_plan.map((p, i) => (
-                <li key={i} className="text-[13px]" style={{ color: 'var(--color-ink-2)' }}>
-                  <p className="mb-1.5 leading-relaxed">{p.action}</p>
-                  <div className="flex gap-1.5">
+                <li key={i} className="text-[14px]" style={{ color: 'var(--color-ink)' }}>
+                  <p className="mb-2 leading-relaxed font-medium">{p.action}</p>
+                  <div className="flex gap-2">
                     <span
-                      className="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded"
+                      className="text-[11px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md"
                       style={{
-                        color: p.impact === 'high' ? '#B03A2E' : '#B45309',
-                        background: p.impact === 'high' ? 'rgba(176,58,46,0.08)' : 'rgba(180,83,9,0.08)',
+                        color: p.impact === 'high' ? '#D94A38' : '#D97706',
+                        background: p.impact === 'high' ? 'rgba(217,74,56,0.12)' : 'rgba(217,119,6,0.12)',
                       }}
                     >
                       {p.impact}
                     </span>
-                    <span className="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#2557A7', background: 'rgba(37,87,167,0.08)' }}>
+                    <span className="text-[11px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md" style={{ color: '#2C6FBF', background: 'rgba(44,111,191,0.12)' }}>
                       {p.effort}
                     </span>
                   </div>
@@ -191,11 +191,11 @@ ${messages.map((m) => `  [${m.recruiter}] ${m.text}`).join('\n')}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.35 }}
-          className="card p-6 mb-8"
-          style={{ borderLeft: '2px solid var(--color-ink)', background: 'var(--color-surface)' }}
+          className="card p-7 mb-8"
+          style={{ borderLeft: '3px solid var(--color-ink)', background: 'linear-gradient(135deg, rgba(26,26,24,0.02) 0%, rgba(26,26,24,0.01) 100%)' }}
         >
-          <p className="font-label mb-2">The one thing even Alex conceded on:</p>
-          <p className="text-[15px] font-medium leading-relaxed" style={{ color: 'var(--color-ink)' }}>
+          <p className="font-label mb-3">The one thing even Alex conceded on:</p>
+          <p className="text-[16px] font-medium leading-relaxed" style={{ color: 'var(--color-ink)' }}>
             {scoreData.strongest_asset}
           </p>
         </motion.div>
@@ -208,31 +208,31 @@ ${messages.map((m) => `  [${m.recruiter}] ${m.text}`).join('\n')}
             transition={{ delay: 0.5, duration: 0.35 }}
             className="mb-8"
           >
-            <h3 className="font-label mb-4 text-center">Committee verdicts</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <h3 className="font-label mb-5 text-center">Committee verdicts</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {scoreData.recruiter_verdicts.map(({ recruiter, stance, reasoning }) => {
-                const colors: Record<RecruiterName, string> = { ALEX: '#B03A2E', MAYA: '#1A8A65', JIN: '#2557A7' };
+                const colors: Record<RecruiterName, string> = { ALEX: '#D94A38', MAYA: '#1D9E75', JIN: '#2C6FBF' };
                 const names: Record<RecruiterName, string>  = { ALEX: 'Alex', MAYA: 'Maya', JIN: 'Jin' };
-                const stanceColors: Record<string, string>  = { hire: '#1A8A65', 'no-hire': '#B03A2E', maybe: '#B45309' };
+                const stanceColors: Record<string, string>  = { hire: '#1D9E75', 'no-hire': '#D94A38', maybe: '#D97706' };
                 const stanceLabels: Record<string, string>  = { hire: 'Hire', 'no-hire': 'No hire', maybe: 'Maybe' };
                 return (
-                  <div key={recruiter} className="card p-4">
-                    <div className="flex items-center gap-2 mb-3">
+                  <div key={recruiter} className="card p-5">
+                    <div className="flex items-center gap-3 mb-4">
                       <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-medium flex-shrink-0"
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
                         style={{ backgroundColor: colors[recruiter] }}
                       >
-                        {recruiter === 'ALEX' ? 'AX' : recruiter === 'MAYA' ? 'MY' : 'JN'}
+                        {recruiter === 'ALEX' ? 'A' : recruiter === 'MAYA' ? 'M' : 'J'}
                       </div>
-                      <span className="text-[13px] font-medium" style={{ color: 'var(--color-ink)' }}>{names[recruiter]}</span>
+                      <span className="text-[14px] font-semibold" style={{ color: 'var(--color-ink)' }}>{names[recruiter]}</span>
                       <span
-                        className="ml-auto text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded"
-                        style={{ color: stanceColors[stance], background: stanceColors[stance] + '18' }}
+                        className="ml-auto text-[11px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md"
+                        style={{ color: stanceColors[stance], background: stanceColors[stance] + '14' }}
                       >
                         {stanceLabels[stance]}
                       </span>
                     </div>
-                    <p className="text-[12px] leading-relaxed" style={{ color: 'var(--color-ink-2)' }}>{reasoning}</p>
+                    <p className="text-[13px] leading-relaxed" style={{ color: 'var(--color-muted)' }}>{reasoning}</p>
                   </div>
                 );
               })}

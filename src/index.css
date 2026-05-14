@@ -3,26 +3,31 @@
 @theme {
   --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
 
-  /* ── Core palette (Premium Matte Grey) ──────────────────────── */
-  --color-canvas:  #E8E8E8;   /* Matte grey background             */
-  --color-surface: #F2F2F2;   /* Slightly lighter surface          */
+  /* ── Core palette (Premium Refined) ──────────────────────── */
+  --color-canvas:  #FAFAF8;   /* Warm white background             */
+  --color-surface: #FFFFFF;   /* Pure white surface                */
   --color-raised:  #FFFFFF;   /* True white for top elements       */
-  --color-edge:    #D1D1D1;   /* Soft border                       */
-  --color-edge-strong: #A3A3A3; 
-  --color-ink:     #1A1A1A;   /* Deep slate text                   */
+  --color-edge:    #E5E4E0;   /* Refined soft border               */
+  --color-edge-strong: #D1D1D1; 
+  --color-ink:     #1A1A18;   /* Warm deep text                    */
   --color-ink-2:   #404040;   
-  --color-muted:   #737373;   
+  --color-muted:   #6B6B66;   /* Warmer muted tone                 */
   --color-faint:   #A3A3A3;   
-  --color-dark:    #0A0A0A;
+  --color-dark:    #0A0A08;
 
-  /* ── Recruiter accent colours (Refined) ──────────────────────── */
-  --color-alex:    #D94A38;   /* Soft Coral                        */
-  --color-maya:    #2B9B76;   /* Soft Mint                         */
-  --color-jin:     #2E72CC;   /* Soft Blue                         */
+  /* ── Recruiter accent colours (Vibrant) ──────────────────────── */
+  --color-alex:    #D94A38;   /* Deep Coral                        */
+  --color-maya:    #1D9E75;   /* Vibrant Teal                      */
+  --color-jin:     #2C6FBF;   /* Confident Blue                    */
 
-  /* ── Utility ─────────────────────────────────────────────────── */
+  /* ── Utility ─────────────────────────────────────────────── */
   --color-amber:   #D97706;
   --color-highlight: #FDF6E3;
+  
+  /* ── Shadows (Premium depth) ──────────────────────────────── */
+  --shadow-sm:     0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md:     0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg:     0 8px 24px rgba(0, 0, 0, 0.10);
 }
 
 /* ── Base ───────────────────────────────────────────────────────── */
@@ -48,6 +53,7 @@
   line-height: 1.05;
   letter-spacing: -0.04em;
   color: var(--color-ink);
+  text-wrap: balance;
 }
 
 .font-headline {
@@ -56,6 +62,7 @@
   line-height: 1.2;
   letter-spacing: -0.02em;
   color: var(--color-ink);
+  text-wrap: balance;
 }
 
 .font-label {
@@ -105,15 +112,20 @@
 .animate-pulse-dot  { animation: pulseDot 2s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
 .animate-blink      { animation: blink 1s step-end infinite; }
 
-/* ── UI System (Clean Matte Flat) ───────────────────────────────── */
+/* ── UI System (Premium Refined) ───────────────────────────────── */
 
 /* Standard card */
 .card {
   background: var(--color-surface);
   border-radius: 16px;
   border: 1px solid var(--color-edge);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-edge-strong);
 }
 
 /* Inputs */
@@ -121,14 +133,16 @@
   background: var(--color-surface);
   border-radius: 12px;
   border: 1px solid var(--color-edge);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 15px;
 }
 
 .clay-input:focus {
   border-color: var(--color-ink);
   background: var(--color-raised);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02), 0 0 0 3px rgba(26, 26, 24, 0.08);
 }
 
 /* Buttons */
@@ -138,19 +152,22 @@
   border: 1px solid var(--color-edge);
   font-weight: 600;
   color: var(--color-ink);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  font-size: 15px;
 }
 
 .clay-btn:hover {
   background: var(--color-raised);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-edge-strong);
 }
 
 .clay-btn:active {
   transform: translateY(0);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Primary Button */
@@ -160,19 +177,21 @@
   border: 1px solid var(--color-dark);
   font-weight: 700;
   color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  font-size: 15px;
 }
 
 .clay-btn-primary:hover {
   background: var(--color-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 .clay-btn-primary:active {
   transform: translateY(0);
+  box-shadow: var(--shadow-md);
 }
 
 /* ── Coverage bar ───────────────────────────────────────────────── */
@@ -185,12 +204,12 @@
 .skeleton {
   background: linear-gradient(
     90deg,
-    var(--color-edge) 25%,
-    var(--color-edge-strong) 50%,
-    var(--color-edge) 75%
+    var(--color-surface) 25%,
+    var(--color-edge) 50%,
+    var(--color-surface) 75%
   );
   background-size: 200% 100%;
-  animation: shimmer 1.6s ease-in-out infinite;
+  animation: shimmer 1.8s ease-in-out infinite;
   border-radius: 8px;
 }
 
@@ -212,7 +231,7 @@
   font-size: 14px;
   font-weight: 700;
   color: var(--color-muted);
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   border: none;
   background: transparent;
@@ -222,14 +241,14 @@
 
 .nav-item:hover { 
   color: var(--color-ink); 
-  background: var(--color-surface); 
+  background: rgba(26, 26, 24, 0.04); 
 }
 
 .nav-item.active { 
   color: var(--color-ink); 
   background: var(--color-raised);
   border: 1px solid var(--color-edge);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
 }
 
 .nav-item.disabled { 
