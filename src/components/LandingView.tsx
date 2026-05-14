@@ -17,23 +17,35 @@ const recruiters = [
   { initials: 'JN', name: 'Jin', role: 'The Verdict', colorClass: 'bg-jin' },
 ];
 
+function loadPdfJs(): Promise<any> {
+  return new Promise((resolve, reject) => {
+    if ((window as any).pdfjsLib) {
+      resolve((window as any).pdfjsLib);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    script.onload = () => {
+      const lib = (window as any).pdfjsLib;
+      if (lib) {
+        lib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        resolve(lib);
+      } else {
+        reject(new Error('pdf.js failed to load'));
+      }
+    };
+    script.onerror = () => reject(new Error('Failed to load pdf.js script'));
+    document.head.appendChild(script);
+  });
+}
+
 async function extractTextFromFile(file: File): Promise<string> {
   if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
     try {
-      const pdfjsScript = document.createElement('script');
-      pdfjsScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
-      pdfjsScript.type = 'module';
-
+      const pdfjsLib = await loadPdfJs();
       const arrayBuffer = await file.arrayBuffer();
-
-      const pdfjsModule = await import(
-        /* @vite-ignore */
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs'
-      );
-      pdfjsModule.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
-
-      const pdf = await pdfjsModule.getDocument({ data: arrayBuffer }).promise;
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       let text = '';
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
