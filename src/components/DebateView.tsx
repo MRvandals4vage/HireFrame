@@ -113,31 +113,61 @@ export function DebateView({
     abortRef.current = controller;
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${key}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: SYSTEM_PROMPT(targetRole) }]
+      let response;
+      try {
+        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${key}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `Resume:\n${resumeText}\n\nTarget role: ${targetRole}` }],
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{ text: SYSTEM_PROMPT(targetRole) }]
             },
-          ],
-          generationConfig: {
-            maxOutputTokens: 4096,
-          }
-        }),
-        signal: controller.signal,
-      });
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: `Resume:\n${resumeText}\n\nTarget role: ${targetRole}` }],
+              },
+            ],
+            generationConfig: {
+              maxOutputTokens: 4096,
+            }
+          }),
+          signal: controller.signal,
+        });
 
-      if (!response.ok) {
-        const errBody = await response.text();
-        throw new Error(`API error ${response.status}: ${errBody}`);
+        if (!response.ok) throw new Error('Gemini API Error');
+      } catch (geminiError) {
+        // Fallback to Groq if Gemini fails
+        const groqKey = typeof import.meta !== 'undefined'
+          ? (import.meta as any).env?.VITE_GROQ_API_KEY || ''
+          : '';
+        
+        response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${groqKey}`
+          },
+          body: JSON.stringify({
+            model: 'openai/gpt-oss-20b',
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT(targetRole) },
+              { role: 'user', content: `Resume:\n${resumeText}\n\nTarget role: ${targetRole}` }
+            ],
+            temperature: 1,
+            max_tokens: 4096,
+            top_p: 1,
+            stream: true
+          }),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          const errBody = await response.text();
+          throw new Error(`Fallback API error ${response.status}: ${errBody}`);
+        }
       }
 
       const reader = response.body!.getReader();
@@ -157,8 +187,18 @@ export function DebateView({
 
           if (line.startsWith('data: ')) {
             try {
-              const data = JSON.parse(line.slice(6));
-              const textChunk = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+              let textChunk = '';
+              
+              if (line.includes('"candidates"')) {
+                // Gemini format
+                const data = JSON.parse(line.slice(6));
+                textChunk = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              } else if (line.includes('"choices"')) {
+                // Groq (OpenAI) format
+                const data = JSON.parse(line.slice(6));
+                textChunk = data?.choices?.[0]?.delta?.content || '';
+              }
+
               if (textChunk) {
                 fullText += textChunk;
                 processStreamBuffer(fullText);
