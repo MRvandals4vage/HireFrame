@@ -113,7 +113,7 @@ export function DebateView({
     abortRef.current = controller;
 
     try {
-      const response = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:streamGenerateContent?alt=sse&key=\${key}\`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:streamGenerateContent?alt=sse&key=${key}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ export function DebateView({
           contents: [
             {
               role: 'user',
-              parts: [{ text: \`Resume:\\n\${resumeText}\\n\\nTarget role: \${targetRole}\` }],
+              parts: [{ text: `Resume:\n${resumeText}\n\nTarget role: ${targetRole}` }],
             },
           ],
           generationConfig: {
@@ -137,7 +137,7 @@ export function DebateView({
 
       if (!response.ok) {
         const errBody = await response.text();
-        throw new Error(\`API error \${response.status}: \${errBody}\`);
+        throw new Error(`API error ${response.status}: ${errBody}`);
       }
 
       const reader = response.body!.getReader();
