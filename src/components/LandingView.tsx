@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import type { EvaluationMode } from '../types';
 
 interface Props {
@@ -19,12 +19,6 @@ const EVALUATION_MODES: { mode: EvaluationMode; label: string; desc: string }[] 
   { mode: 'Fintech',             label: 'Fintech',             desc: 'Reliability, compliance, data'  },
   { mode: 'ML Engineering',      label: 'ML Engineering',      desc: 'Models, pipelines, benchmarks' },
   { mode: 'Frontend Engineering',label: 'Frontend',            desc: 'UX depth, perf, architecture'  },
-];
-
-const recruiters = [
-  { initials: 'AX', name: 'Alex',  role: 'Staff Engineer', color: '#B03A2E' },
-  { initials: 'MY', name: 'Maya',  role: 'Eng Manager',    color: '#1A8A65' },
-  { initials: 'JN', name: 'Jin',   role: 'VP Engineering', color: '#2557A7' },
 ];
 
 function loadPdfJs(): Promise<any> {
@@ -78,6 +72,7 @@ export function LandingView({
   const [fileName, setFileName]     = useState('');
   const [showPaste, setShowPaste]   = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
@@ -88,8 +83,10 @@ export function LandingView({
     setFileName(file.name);
     try {
       setResumeText(await extractTextFromFile(file));
+      setShowConfigModal(true);
     } catch {
       setResumeText('[Error reading file. Please paste your resume text instead.]');
+      setShowPaste(true);
     } finally {
       setIsExtracting(false);
     }
@@ -99,220 +96,247 @@ export function LandingView({
   const handleDragOver  = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true);  }, []);
   const handleDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); }, []);
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
-      <div className="w-full max-w-[480px]">
+  const handlePasteSubmit = () => {
+    if (resumeText.trim().length > 0) {
+      setShowConfigModal(true);
+    }
+  };
 
-        {/* Wordmark */}
+  return (
+    <div className="min-h-screen flex items-center justify-center px-6 py-16 bg-canvas relative overflow-hidden">
+      
+      {/* Main minimal UI */}
+      <div className="w-full max-w-[440px] flex flex-col items-center relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mb-12"
+          transition={{ duration: 0.5 }}
+          className="mb-10 text-center"
         >
-          <p className="font-label mb-4" style={{ color: 'var(--color-muted)' }}>HireFrame</p>
-          <h1 className="font-display" style={{ color: 'var(--color-ink)' }}>
-            Three opinions.<br />One honest verdict.
+          <h1 className="text-[40px] font-bold tracking-tight" style={{ color: 'var(--color-ink)' }}>
+            Hire Frame
           </h1>
-          <p className="mt-4 text-[15px] leading-relaxed" style={{ color: 'var(--color-muted)' }}>
-            Drop your resume. A senior engineering panel debates it live.
+          <p className="mt-2 text-[15px]" style={{ color: 'var(--color-muted)' }}>
+            AI-powered interview readiness assessment.
           </p>
         </motion.div>
 
-        {/* Recruiter chips */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="flex items-center gap-5 mb-12"
-        >
-          {recruiters.map((r, i) => (
-            <motion.div
-              key={r.initials}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 + i * 0.07, duration: 0.3 }}
-              className="flex items-center gap-2.5"
-            >
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-semibold tracking-wide flex-shrink-0"
-                style={{ backgroundColor: r.color }}
-              >
-                {r.initials}
-              </div>
-              <div>
-                <p className="text-[13px] font-medium leading-tight" style={{ color: 'var(--color-ink)' }}>{r.name}</p>
-                <p className="text-[11px] leading-tight" style={{ color: 'var(--color-muted)' }}>{r.role}</p>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Form */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="space-y-6"
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="w-full"
         >
+          {!showPaste ? (
+            <div
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onClick={() => !isExtracting && fileInputRef.current?.click()}
+              className={`
+                relative rounded-[20px] p-10 flex flex-col items-center justify-center cursor-pointer
+                transition-all duration-300 text-center
+                ${isDragging ? 'bg-edge scale-105' : 'bg-surface hover:scale-[1.02]'}
+              `}
+              style={{
+                boxShadow: isDragging 
+                  ? 'inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,0.8)' 
+                  : '8px 8px 24px rgba(0,0,0,0.06), -8px -8px 24px rgba(255,255,255,0.8)',
+                border: '1px solid rgba(255, 255, 255, 0.4)',
+              }}
+            >
+              {isExtracting ? (
+                <div className="flex flex-col items-center gap-3">
+                  <svg className="animate-spin h-6 w-6 text-ink opacity-70" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  <span className="text-[14px] font-medium text-ink">Analyzing document...</span>
+                </div>
+              ) : (
+                <>
+                  <div className="w-12 h-12 rounded-full bg-canvas flex items-center justify-center mb-4" style={{ boxShadow: 'inset 2px 2px 4px rgba(0,0,0,0.05), inset -2px -2px 4px rgba(255,255,255,0.8)' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-ink)' }}>
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                  </div>
+                  <p className="text-[16px] font-bold text-ink mb-1">Upload Resume</p>
+                  <p className="text-[13px] text-muted">Drop PDF, DOCX, or click to browse</p>
+                </>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.txt,.doc,.docx,.md"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <textarea
+                value={resumeText}
+                onChange={(e) => setResumeText(e.target.value)}
+                placeholder="Paste your resume text here..."
+                rows={8}
+                className="w-full p-5 text-[14px] leading-relaxed resize-none transition-all rounded-[20px]"
+                style={{
+                  background: 'var(--color-surface)',
+                  color: 'var(--color-ink)',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
+                  boxShadow: 'inset 4px 4px 8px rgba(0,0,0,0.04), inset -4px -4px 8px rgba(255,255,255,0.8)',
+                  outline: 'none',
+                }}
+              />
+              <button
+                onClick={handlePasteSubmit}
+                disabled={!resumeText.trim()}
+                className="py-3 px-5 rounded-[14px] text-[15px] font-semibold tracking-wide transition-all duration-200"
+                style={{
+                  background: resumeText.trim() ? 'var(--color-ink)' : 'var(--color-edge)',
+                  color: resumeText.trim() ? '#fff' : 'var(--color-muted)',
+                  boxShadow: resumeText.trim() ? '4px 4px 12px rgba(0,0,0,0.15)' : 'none',
+                  cursor: resumeText.trim() ? 'pointer' : 'not-allowed',
+                }}
+              >
+                Continue
+              </button>
+            </div>
+          )}
 
-          {/* Resume upload */}
-          <div>
-            <p className="font-label mb-2">Resume</p>
-            {!showPaste ? (
-              <>
-                <div
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`
-                    relative border rounded-lg p-7 flex flex-col items-center justify-center cursor-pointer
-                    transition-all duration-200 text-center
-                    ${isDragging
-                      ? 'border-ink bg-edge/30'
-                      : fileName
-                        ? 'border-edge bg-surface'
-                        : 'border-dashed border-edge-strong bg-surface hover:border-ink hover:bg-canvas'
-                    }
-                  `}
+          {!showPaste && !isExtracting && (
+            <button
+              type="button"
+              onClick={() => setShowPaste(true)}
+              className="mt-6 text-[13px] font-medium text-muted hover:text-ink transition-colors cursor-pointer w-full text-center"
+            >
+              or paste text instead
+            </button>
+          )}
+          {showPaste && (
+            <button
+              type="button"
+              onClick={() => { setShowPaste(false); setResumeText(''); }}
+              className="mt-4 text-[13px] font-medium text-muted hover:text-ink transition-colors cursor-pointer w-full text-center"
+            >
+              Upload a file instead
+            </button>
+          )}
+        </motion.div>
+      </div>
+
+      {/* Configuration Modal Popup */}
+      <AnimatePresence>
+        {showConfigModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            style={{ background: 'rgba(230, 230, 230, 0.6)', backdropFilter: 'blur(8px)' }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="w-full max-w-[500px] p-8 rounded-[28px]"
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid rgba(255, 255, 255, 0.6)',
+                boxShadow: '12px 12px 32px rgba(0,0,0,0.1), -12px -12px 32px rgba(255,255,255,0.9)',
+              }}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-[22px] font-bold text-ink">Evaluation Settings</h2>
+                <button 
+                  onClick={() => setShowConfigModal(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-edge transition-colors"
                 >
-                  {isExtracting ? (
-                    <div className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--color-muted)' }}>
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                      Extracting text…
-                    </div>
-                  ) : fileName ? (
-                    <div className="flex items-center gap-2 text-[13px] font-medium" style={{ color: 'var(--color-maya)' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                      {fileName}
-                    </div>
-                  ) : (
-                    <>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-2.5" style={{ color: 'var(--color-faint)' }}>
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" y1="3" x2="12" y2="15" />
-                      </svg>
-                      <p className="text-[13px]" style={{ color: 'var(--color-muted)' }}>
-                        Drop PDF or click to browse
-                      </p>
-                    </>
-                  )}
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <p className="font-label mb-2">Target Role</p>
                   <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.txt,.doc,.docx,.md"
-                    className="hidden"
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+                    type="text"
+                    value={targetRole}
+                    onChange={(e) => setTargetRole(e.target.value)}
+                    placeholder="e.g. Frontend Engineer at a Series B startup"
+                    className="w-full p-4 text-[14px] rounded-[16px] transition-all"
+                    style={{
+                      background: 'var(--color-surface)',
+                      color: 'var(--color-ink)',
+                      border: 'none',
+                      boxShadow: 'inset 4px 4px 8px rgba(0,0,0,0.04), inset -4px -4px 8px rgba(255,255,255,0.8)',
+                      outline: 'none',
+                    }}
+                    autoFocus
                   />
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowPaste(true)}
-                  className="mt-2 text-[12px] transition-colors cursor-pointer"
-                  style={{ color: 'var(--color-muted)' }}
-                >
-                  or paste text instead
-                </button>
-              </>
-            ) : (
-              <>
-                <textarea
-                  value={resumeText}
-                  onChange={(e) => setResumeText(e.target.value)}
-                  placeholder="Paste your resume here…"
-                  rows={7}
-                  className="w-full rounded-lg p-4 text-[13px] leading-relaxed resize-none transition-all outline-none border"
-                  style={{
-                    background: 'var(--color-surface)',
-                    borderColor: 'var(--color-edge)',
-                    color: 'var(--color-ink)',
-                  }}
-                  onFocus={(e) => { e.target.style.borderColor = 'var(--color-ink)'; }}
-                  onBlur={(e)  => { e.target.style.borderColor = 'var(--color-edge)'; }}
-                />
-                <button
-                  type="button"
-                  onClick={() => { setShowPaste(false); setResumeText(''); }}
-                  className="mt-2 text-[12px] transition-colors cursor-pointer"
-                  style={{ color: 'var(--color-muted)' }}
-                >
-                  Upload a file instead
-                </button>
-              </>
-            )}
-          </div>
+                <div>
+                  <p className="font-label mb-3">Evaluation Mode</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {EVALUATION_MODES.map(({ mode, label, desc }) => {
+                      const active = evaluationMode === mode;
+                      return (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => setEvaluationMode(mode)}
+                          className="text-left p-4 rounded-[16px] transition-all duration-200"
+                          style={{
+                            background: active ? 'var(--color-ink)' : 'var(--color-surface)',
+                            color: active ? '#fff' : 'var(--color-ink)',
+                            boxShadow: active 
+                              ? '4px 4px 12px rgba(0,0,0,0.1)' 
+                              : '4px 4px 8px rgba(0,0,0,0.04), -4px -4px 8px rgba(255,255,255,0.8)',
+                            border: '1px solid rgba(255, 255, 255, 0.4)',
+                          }}
+                        >
+                          <span className="block font-bold text-[13px] mb-1">{label}</span>
+                          <span className="block text-[11px] leading-snug opacity-70">{desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-          {/* Target role */}
-          <div>
-            <p className="font-label mb-2">Target Role</p>
-            <input
-              type="text"
-              value={targetRole}
-              onChange={(e) => setTargetRole(e.target.value)}
-              placeholder="e.g. Frontend Engineer at a Series B startup"
-              className="w-full py-2.5 px-0 text-[15px] bg-transparent border-0 border-b outline-none transition-colors"
-              style={{
-                borderColor: 'var(--color-edge)',
-                color: 'var(--color-ink)',
-              }}
-              onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = 'var(--color-ink)'; }}
-              onBlur={(e)  => { (e.target as HTMLInputElement).style.borderColor = 'var(--color-edge)'; }}
-            />
-          </div>
-
-          {/* Evaluation mode */}
-          <div>
-            <p className="font-label mb-2">Evaluation Mode</p>
-            <div className="grid grid-cols-3 gap-1.5">
-              {EVALUATION_MODES.map(({ mode, label, desc }) => {
-                const active = evaluationMode === mode;
-                return (
+                <div className="pt-2">
                   <button
-                    key={mode}
-                    type="button"
-                    onClick={() => setEvaluationMode(mode)}
-                    className="text-left p-3 rounded-lg border text-[12px] transition-all duration-150 cursor-pointer"
+                    onClick={() => { setShowConfigModal(false); onStart(); }}
+                    disabled={!canStart}
+                    className="w-full py-4 rounded-[16px] text-[15px] font-bold tracking-wide transition-all duration-200 flex items-center justify-center gap-2"
                     style={{
-                      borderColor: active ? 'var(--color-ink)' : 'var(--color-edge)',
-                      background:  active ? 'var(--color-ink)' : 'var(--color-surface)',
-                      color:       active ? '#fff'             : 'var(--color-muted)',
+                      background: canStart ? 'var(--color-jin)' : 'var(--color-edge)',
+                      color: canStart ? '#fff' : 'var(--color-muted)',
+                      boxShadow: canStart ? '4px 4px 16px rgba(53,120,212,0.3)' : 'none',
+                      cursor: canStart ? 'pointer' : 'not-allowed',
                     }}
                   >
-                    <span className="block font-medium mb-0.5" style={{ color: active ? '#fff' : 'var(--color-ink-2)' }}>{label}</span>
-                    <span className="block text-[11px] leading-snug opacity-70">{desc}</span>
+                    Start Evaluation
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
                   </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* CTA */}
-          <button
-            onClick={onStart}
-            disabled={!canStart}
-            className="w-full py-3 px-5 rounded-lg text-[14px] font-medium tracking-wide transition-all duration-200 flex items-center justify-center gap-2"
-            style={{
-              background: canStart ? 'var(--color-ink)' : 'var(--color-edge)',
-              color:      canStart ? '#fff'             : 'var(--color-muted)',
-              cursor:     canStart ? 'pointer'          : 'not-allowed',
-            }}
-          >
-            Begin evaluation
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-          </button>
-        </motion.div>
-      </div>
+                  {(!apiKey) && (
+                    <p className="text-center text-[11px] text-alex mt-3 font-medium">Missing API key in .env</p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

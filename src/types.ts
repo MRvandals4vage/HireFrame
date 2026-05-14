@@ -1,4 +1,23 @@
-export type Screen = 'landing' | 'debate' | 'reveal';
+export type Screen = 'landing' | 'debate' | 'reveal' | 'interview';
+
+export interface InterviewMetric {
+  name: string;
+  score: number;
+  feedback: string;
+}
+
+export interface InterviewFeedback {
+  overall_score: number;
+  critique: string;
+  metrics: InterviewMetric[];
+  better_answer: string;
+}
+
+export interface InterviewState {
+  questionIndex: number;
+  answers: Record<number, string>;
+  feedbacks: Record<number, InterviewFeedback>;
+}
 
 export type RecruiterName = 'ALEX' | 'MAYA' | 'JIN';
 

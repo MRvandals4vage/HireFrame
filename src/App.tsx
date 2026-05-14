@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import { LandingView } from './components/LandingView';
 import { DebateView } from './components/DebateView';
 import { ScoreReveal } from './components/ScoreReveal';
-import type { Screen, Message, ScoreData, CoverageTopic, EvaluationMode } from './types';
+import { InterviewView } from './components/InterviewView';
+import type { Screen, Message, ScoreData, CoverageTopic, EvaluationMode, InterviewState } from './types';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('landing');
@@ -13,6 +14,11 @@ export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [coverageTopics, setCoverageTopics] = useState<Set<CoverageTopic>>(new Set());
   const [scoreData, setScoreData] = useState<ScoreData | null>(null);
+  const [interviewState, setInterviewState] = useState<InterviewState>({
+    questionIndex: 0,
+    answers: {},
+    feedbacks: {},
+  });
 
   const handleStart = () => {
     setMessages([]);
@@ -33,6 +39,7 @@ export default function App() {
     setMessages([]);
     setCoverageTopics(new Set());
     setScoreData(null);
+    setInterviewState({ questionIndex: 0, answers: {}, feedbacks: {} });
     setScreen('landing');
   };
 
@@ -49,7 +56,7 @@ export default function App() {
           >
             {/* Wordmark */}
             <div className="mb-10">
-              <span className="text-[13px] font-semibold tracking-tight text-ink">HireFrame</span>
+              <span className="text-[14px] font-bold tracking-tight text-ink">Hire Frame</span>
             </div>
 
             {/* Nav */}
@@ -69,6 +76,17 @@ export default function App() {
               >
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${screen === 'reveal' ? 'bg-ink' : !scoreData ? 'bg-edge' : 'bg-edge-strong'}`} />
                 Diagnostics
+                {!scoreData && (
+                  <span className="ml-auto text-[10px] text-faint font-normal">pending</span>
+                )}
+              </button>
+              <button
+                onClick={() => { if (scoreData) setScreen('interview'); }}
+                disabled={!scoreData}
+                className={`nav-item ${screen === 'interview' ? 'active' : ''} ${!scoreData ? 'disabled' : ''}`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${screen === 'interview' ? 'bg-ink' : !scoreData ? 'bg-edge' : 'bg-edge-strong'}`} />
+                Mock Interview
                 {!scoreData && (
                   <span className="ml-auto text-[10px] text-faint font-normal">pending</span>
                 )}
@@ -144,6 +162,24 @@ export default function App() {
                 messages={messages}
                 targetRole={targetRole}
                 onRestart={() => {}}
+              />
+            </motion.div>
+          )}
+
+          {screen === 'interview' && (
+            <motion.div
+              key="interview"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <InterviewView
+                scoreData={scoreData}
+                targetRole={targetRole}
+                evaluationMode={evaluationMode}
+                interviewState={interviewState}
+                setInterviewState={setInterviewState}
               />
             </motion.div>
           )}

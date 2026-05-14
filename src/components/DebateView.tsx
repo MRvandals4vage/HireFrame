@@ -478,8 +478,7 @@ export function DebateView({
           </div>
           <button
             onClick={() => { setError(null); setHasStarted(false); isStreamingRef.current = false; setTimeout(() => startDebate(), 100); }}
-            className="text-[13px] font-medium px-4 py-2 rounded-lg transition-all cursor-pointer"
-            style={{ background: 'var(--color-ink)', color: '#fff' }}
+            className="clay-btn text-[13px] px-4 py-2"
           >
             Retry
           </button>
@@ -494,9 +493,9 @@ export function DebateView({
           return (
             <div
               key={recruiter}
-              className="flex flex-col bg-surface border rounded-xl overflow-hidden min-h-[300px] md:min-h-0 transition-all duration-300"
+              className="flex flex-col card overflow-hidden min-h-[300px] md:min-h-0 transition-all duration-300"
               style={{
-                borderColor: isCurrentSpeaker ? config.color + '50' : 'var(--color-edge)',
+                boxShadow: isCurrentSpeaker ? `0 0 0 2px ${config.color}50, 8px 8px 16px rgba(18, 42, 66, 0.06), -8px -8px 16px rgba(255, 255, 255, 0.8), inset 2px 2px 4px rgba(255, 255, 255, 0.5)` : undefined,
               }}
             >
               {/* Column header */}

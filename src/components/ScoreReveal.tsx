@@ -283,8 +283,7 @@ ${messages.map((m) => `  [${m.recruiter}] ${m.text}`).join('\n')}
         >
           <button
             onClick={handleCopy}
-            className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-[13px] font-medium transition-all"
-            style={{ background: 'var(--color-ink)', color: '#fff' }}
+            className="clay-btn-primary flex items-center justify-center gap-2 px-8 py-3 text-[14px]"
           >
             {copied ? (
               <>
