@@ -12,7 +12,6 @@ export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [coverageTopics, setCoverageTopics] = useState<Set<CoverageTopic>>(new Set());
   const [scoreData, setScoreData] = useState<ScoreData | null>(null);
-  const [apiKey, setApiKey] = useState('');
 
   const handleStart = () => {
     setMessages([]);
@@ -51,8 +50,6 @@ export default function App() {
               setResumeText={setResumeText}
               targetRole={targetRole}
               setTargetRole={setTargetRole}
-              apiKey={apiKey}
-              setApiKey={setApiKey}
               onStart={handleStart}
             />
           </motion.div>
@@ -70,7 +67,6 @@ export default function App() {
             <DebateView
               resumeText={resumeText}
               targetRole={targetRole}
-              apiKey={apiKey}
               messages={messages}
               setMessages={setMessages}
               coverageTopics={coverageTopics}

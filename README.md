@@ -1,20 +1,44 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# SignalForge — AI Interview Readiness Tool
 
-# Run and deploy your AI Studio app
+Three AI recruiter personas debate your resume in real time and produce a readiness score.
 
-This contains everything you need to run your app locally.
+## How It Works
 
-View your app in AI Studio: https://ai.studio/apps/58d2ef5d-a564-4412-b7e5-92f114e2a11d
+1. **Upload your resume** (PDF, text, or paste) and enter your target role
+2. **Watch the debate** — Alex (Skeptic), Maya (Champion), and Jin (Verdict) evaluate your resume in real time via Claude AI streaming
+3. **Get your score** — readiness score, hire blockers, accelerators, 30-day improvement plan
 
-## Run Locally
+## Tech Stack
 
-**Prerequisites:**  Node.js
+- **React 19** + **Vite** + **TypeScript**
+- **Tailwind CSS v4** — custom design system
+- **Anthropic Claude API** (`claude-sonnet-4-20250514`) — streaming SSE
+- **Motion** (Framer Motion) — page transitions and animations
 
+## Setup
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+```bash
+# Install dependencies
+npm install
+
+# Create .env with your Anthropic API key
+cp .env.example .env
+# Edit .env and add your key (or enter it in the app UI)
+
+# Start dev server
+npm run dev
+```
+
+## Design System
+
+| Token | Value |
+|-------|-------|
+| Background | `#F7F7F5` |
+| Surface | `#FFFFFF` |
+| Border | `#E5E4E0` |
+| Text Primary | `#1A1A18` |
+| Text Secondary | `#6B6B66` |
+| Alex (Skeptic) | `#C0392B` (red) |
+| Maya (Champion) | `#1D9E75` (green) |
+| Jin (Verdict) | `#2C6FBF` (blue) |
+| Font | Inter, weights 300/400/500 |

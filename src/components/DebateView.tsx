@@ -5,7 +5,6 @@ import type { Message, ScoreData, CoverageTopic, RecruiterName } from '../types'
 interface Props {
   resumeText: string;
   targetRole: string;
-  apiKey: string;
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   coverageTopics: Set<CoverageTopic>;
@@ -59,7 +58,6 @@ After all 6 exchanges output a JSON block:
 export function DebateView({
   resumeText,
   targetRole,
-  apiKey,
   messages,
   setMessages,
   coverageTopics,
@@ -107,40 +105,39 @@ export function DebateView({
     setCurrentSpeaker(null);
 
     const envKey = typeof import.meta !== 'undefined'
-      ? (import.meta as any).env?.VITE_ANTHROPIC_API_KEY || ''
+      ? (import.meta as any).env?.VITE_GEMINI_API_KEY || ''
       : '';
-    const key = apiKey || envKey;
+    const key = envKey;
 
     const controller = new AbortController();
     abortRef.current = controller;
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:streamGenerateContent?alt=sse&key=\${key}\`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': key,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 4096,
-          stream: true,
-          system: SYSTEM_PROMPT(targetRole),
-          messages: [
+          systemInstruction: {
+            parts: [{ text: SYSTEM_PROMPT(targetRole) }]
+          },
+          contents: [
             {
               role: 'user',
-              content: `Resume:\n${resumeText}\n\nTarget role: ${targetRole}`,
+              parts: [{ text: \`Resume:\\n\${resumeText}\\n\\nTarget role: \${targetRole}\` }],
             },
           ],
+          generationConfig: {
+            maxOutputTokens: 4096,
+          }
         }),
         signal: controller.signal,
       });
 
       if (!response.ok) {
         const errBody = await response.text();
-        throw new Error(`API error ${response.status}: ${errBody}`);
+        throw new Error(\`API error \${response.status}: \${errBody}\`);
       }
 
       const reader = response.body!.getReader();
@@ -165,8 +162,8 @@ export function DebateView({
 
           try {
             const data = JSON.parse(dataLine.slice(6));
-            if (data.type === 'content_block_delta' && data.delta?.text) {
-              fullText += data.delta.text;
+            if (data.candidates && data.candidates[0].content.parts[0].text) {
+              fullText += data.candidates[0].content.parts[0].text;
               processStreamBuffer(fullText);
             }
           } catch {
@@ -184,7 +181,7 @@ export function DebateView({
     } finally {
       setIsStreaming(false);
     }
-  }, [apiKey, resumeText, targetRole, isStreaming]);
+  }, [resumeText, targetRole, isStreaming]);
 
   const processStreamBuffer = useCallback(
     (text: string, isFinal = false) => {

@@ -6,8 +6,6 @@ interface Props {
   setResumeText: (text: string) => void;
   targetRole: string;
   setTargetRole: (role: string) => void;
-  apiKey: string;
-  setApiKey: (key: string) => void;
   onStart: () => void;
 }
 
@@ -66,8 +64,6 @@ export function LandingView({
   setResumeText,
   targetRole,
   setTargetRole,
-  apiKey,
-  setApiKey,
   onStart,
 }: Props) {
   const [isDragging, setIsDragging] = useState(false);
@@ -77,9 +73,8 @@ export function LandingView({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const envKey = typeof import.meta !== 'undefined'
-    ? (import.meta as any).env?.VITE_ANTHROPIC_API_KEY || ''
+    ? (import.meta as any).env?.VITE_GEMINI_API_KEY || ''
     : '';
-  const effectiveApiKey = apiKey || envKey;
 
   const handleFile = useCallback(async (file: File) => {
     setIsExtracting(true);
@@ -114,7 +109,7 @@ export function LandingView({
   const canStart =
     resumeText.trim().length > 0 &&
     targetRole.trim().length > 0 &&
-    effectiveApiKey.trim().length > 0;
+    envKey.trim().length > 0;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
@@ -284,25 +279,6 @@ export function LandingView({
             />
           </div>
 
-          {/* API key input (only if no env var) */}
-          {!envKey && (
-            <div className="space-y-2">
-              <label htmlFor="api-key" className="text-xs font-medium text-muted uppercase tracking-wider block">
-                Anthropic API Key
-              </label>
-              <input
-                id="api-key"
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-ant-..."
-                className="w-full bg-transparent border-0 border-b border-edge focus:border-ink focus:ring-0 text-sm text-ink placeholder:text-muted/40 py-2.5 px-0 transition-colors outline-none font-mono"
-              />
-              <p className="text-[11px] text-muted/60">
-                Your key stays in-browser. Never sent anywhere except Anthropic's API.
-              </p>
-            </div>
-          )}
 
           {/* Start button */}
           <button
