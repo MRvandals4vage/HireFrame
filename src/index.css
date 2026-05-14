@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-canvas: #F7F7F5;
+  --color-surface: #FFFFFF;
+  --color-edge: #E5E4E0;
+  --color-ink: #1A1A18;
+  --color-muted: #6B6B66;
+  --color-alex: #C0392B;
+  --color-maya: #1D9E75;
+  --color-jin: #2C6FBF;
+  --color-alex-tint: rgba(192, 57, 43, 0.08);
+  --color-maya-tint: rgba(29, 158, 117, 0.08);
+  --color-jin-tint: rgba(44, 111, 191, 0.08);
+  --color-dark: #1A1A18;
+  --color-highlight: #FFFBEB;
+  --color-amber: #D97706;
+  --color-score-red: #C0392B;
+  --color-score-amber: #D97706;
+  --color-score-green: #1D9E75;
+}
+
+@layer base {
+  body {
+    @apply bg-canvas text-ink antialiased;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+/* Typography classes */
+.font-headline {
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.font-score {
+  font-size: 80px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.font-score-unit {
+  font-size: 24px;
+  font-weight: 400;
+}
+
+/* Animations */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-fade-slide-up {
+  animation: fadeSlideUp 300ms ease-out forwards;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Coverage bar transition */
+.coverage-segment {
+  transition: background-color 600ms ease, opacity 600ms ease;
+}
+
+/* Skeleton loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0ed 25%, #e8e8e4 50%, #f0f0ed 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Scrollbar styling */
+.debate-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.debate-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.debate-scroll::-webkit-scrollbar-thumb {
+  background: #E5E4E0;
+  border-radius: 4px;
+}
