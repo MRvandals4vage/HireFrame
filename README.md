@@ -6,6 +6,14 @@ Hire Frame is a premium, multi-stage interview simulation platform designed to p
 
 ---
 
+## 📺 Live Demo
+[![Watch the Demo]((https://drive.google.com/file/d/1sJc3lL9FsfJz1-Tg0LNQ0wN17aq5LCE-/view?usp=sharing))
+
+> [!TIP]
+> To properly embed a Google Drive video in GitHub, ensure the link is set to "Anyone with the link can view".
+
+---
+
 ## 🚀 Core Features
 
 ### 1. Live Recruiter Debate (Evaluation Phase)
